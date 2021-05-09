@@ -57,6 +57,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.kotlin.stdlib)
     implementation(libs.androidx.core)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -64,6 +65,8 @@ dependencies {
     implementation(libs.lifecycle)
     implementation(libs.room.ktx)
     kapt(libs.room.kapt)
+    implementation(libs.moshi.core)
+    kapt(libs.moshi.kapt)
     testImplementation(libs.junit)
     testImplementation(libs.room.test)
     androidTestImplementation(libs.test.ext)
