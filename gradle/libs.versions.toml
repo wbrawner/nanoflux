@@ -1,0 +1,25 @@
+[versions]
+androidx-core = "1.3.2"
+androidx-appcompat = "1.2.0"
+compose = "1.0.0-beta05"
+espresso = "3.3.0"
+kotlin = "1.5.0"
+material = "1.3.0"
+
+[libraries]
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+compose-material = { module = "androidx.compose.material:material", version.ref = "compose" }
+compose-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+compose-activity = { module = "androidx.activity:activity-compose", version = "1.3.0-alpha07" }
+compose-test = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose"}
+lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.3.1" }
+junit = { module = "junit:junit", version = "4.12" }
+kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin"}
+test-ext = { module = "androidx.text.ext:junit", version = "1.1.2" }
+espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso"}
+
+[bundles]
+compose = ["compose-ui", "compose-material", "compose-tooling", "compose-activity"]
