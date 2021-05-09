@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -18,12 +19,24 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments.putAll(mapOf(
+                    "room.schemaLocation" to "$projectDir/schemas",
+                    "room.incremental" to "true",
+                    "room.expandProjection" to "true"
+                ))
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -49,7 +62,10 @@ dependencies {
     implementation(libs.material)
     implementation(libs.bundles.compose)
     implementation(libs.lifecycle)
+    implementation(libs.room.ktx)
+    kapt(libs.room.kapt)
     testImplementation(libs.junit)
+    testImplementation(libs.room.test)
     androidTestImplementation(libs.test.ext)
     androidTestImplementation(libs.espresso)
     androidTestImplementation(libs.compose.test)
