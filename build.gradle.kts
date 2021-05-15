@@ -4,13 +4,12 @@ buildscript {
         google()
         mavenCentral()
     }
-    val kotlinVersion by extra<String>("1.5.0")
+    val hiltVersion by extra("2.35")
+    val kotlinVersion by extra("1.4.32")
     dependencies {
         classpath("com.android.tools.build:gradle:7.0.0-alpha15")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle.kts files
+        classpath("com.google.dagger:hilt-android-gradle-plugin:$hiltVersion")
     }
 }
 

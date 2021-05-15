@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -52,7 +53,7 @@ android {
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.compose.get()
-        kotlinCompilerVersion = libs.versions.kotlin.get()
+        kotlinCompilerVersion = rootProject.extra["kotlinVersion"] as String
     }
 }
 
@@ -62,11 +63,20 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.bundles.compose)
+    implementation(libs.preference)
     implementation(libs.lifecycle)
+    implementation(libs.timber)
     implementation(libs.room.ktx)
     kapt(libs.room.kapt)
-    implementation(libs.moshi.core)
+    implementation(libs.bundles.networking)
+    implementation(libs.bundles.moshi)
     kapt(libs.moshi.kapt)
+    implementation(libs.hilt.android.core)
+    kapt(libs.hilt.android.kapt)
+    implementation(libs.hilt.work.core)
+    kapt(libs.hilt.work.kapt)
+    implementation(libs.work.core)
+    testImplementation(libs.work.test)
     testImplementation(libs.junit)
     testImplementation(libs.room.test)
     androidTestImplementation(libs.test.ext)

@@ -3,21 +3,37 @@ package com.wbrawner.nanoflux
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.wbrawner.nanoflux.data.model.Entry
+import com.wbrawner.nanoflux.data.model.Feed
+import com.wbrawner.nanoflux.data.viewmodel.AuthViewModel
+import com.wbrawner.nanoflux.ui.MainScreen
+import com.wbrawner.nanoflux.ui.auth.AuthScreen
 import com.wbrawner.nanoflux.ui.theme.NanofluxTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    val authViewModel: AuthViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            NanofluxTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
-                    Greeting("Android")
+            val authenticated = authViewModel.state.collectAsState()
+            NanofluxApp {
+                if (authenticated.value is AuthViewModel.AuthState.Authenticated) {
+                    MainScreen(authViewModel)
+                } else {
+                    AuthScreen(authViewModel)
                 }
             }
         }
@@ -25,14 +41,31 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun NanofluxApp(content: @Composable () -> Unit) {
+    NanofluxTheme {
+        Surface(color = MaterialTheme.colors.background) {
+            content()
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun DefaultPreview() {
-    NanofluxTheme {
-        Greeting("Android")
+fun AppPreview() {
+    NanofluxApp {
+
     }
+}
+
+@Composable
+fun EntryListItem(
+    entry: Entry,
+    feed: Feed,
+    onEntryItemClicked: (entry: Entry) -> Unit,
+    onFeedClicked: (feed: Feed) -> Unit,
+    onToggleReadClicked: (entry: Entry) -> Unit,
+    onStarClicked: (entry: Entry) -> Unit,
+    onExternalLinkClicked: (entry: Entry) -> Unit
+) {
+
 }
