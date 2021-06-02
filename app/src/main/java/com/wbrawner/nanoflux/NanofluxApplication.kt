@@ -2,9 +2,7 @@ package com.wbrawner.nanoflux
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
-import androidx.room.Room
 import androidx.work.Configuration
-import com.wbrawner.nanoflux.data.NanofluxDatabase
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -15,5 +13,6 @@ class NanofluxApplication : Application(), Configuration.Provider {
 
     override fun getWorkManagerConfiguration(): Configuration = Configuration.Builder()
         .setWorkerFactory(workerFactory)
+        .setMinimumLoggingLevel(android.util.Log.DEBUG)
         .build()
 }

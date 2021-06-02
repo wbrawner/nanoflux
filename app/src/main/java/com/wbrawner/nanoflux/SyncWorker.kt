@@ -1,16 +1,14 @@
 package com.wbrawner.nanoflux
 
-import android.app.Service
 import android.content.Context
-import android.content.Intent
-import android.os.IBinder
 import androidx.hilt.work.HiltWorker
+import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import com.wbrawner.nanoflux.data.MinifluxApiService
-import com.wbrawner.nanoflux.data.repository.EntryRepository
-import com.wbrawner.nanoflux.data.repository.FeedRepository
-import com.wbrawner.nanoflux.data.repository.UserRepository
+import com.wbrawner.nanoflux.network.repository.CategoryRepository
+import com.wbrawner.nanoflux.network.repository.EntryRepository
+import com.wbrawner.nanoflux.network.repository.FeedRepository
+import com.wbrawner.nanoflux.network.repository.IconRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.runBlocking
@@ -22,15 +20,31 @@ class SyncWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters
 ) : Worker(context, workerParams) {
     @Inject
+    lateinit var categoryRepository: CategoryRepository
+
+    @Inject
     lateinit var entryRepository: EntryRepository
+
     @Inject
     lateinit var feedRepository: FeedRepository
 
+    @Inject
+    lateinit var iconRepository: IconRepository
+
     override fun doWork(): Result {
-        runBlocking {
-            feedRepository.getAll()
-            entryRepository.getAll()
+        return runBlocking {
+            try {
+                categoryRepository.getAll(true)
+                feedRepository.getAll(true).forEach {
+                    if (it.feed.iconId != null) {
+                        iconRepository.getFeedIcon(it.feed.id)
+                    }
+                }
+                entryRepository.getAll(true)
+                Result.success()
+            } catch (e: Exception) {
+               Result.failure(Data.Builder().putString("message", e.message?: "Unknown failure").build())
+            }
         }
-        return Result.success()
     }
 }
