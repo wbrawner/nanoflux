@@ -8,3 +8,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Nanoflux"
 include(":app")
+include(":storage")
+include(":network")
+include(":common")

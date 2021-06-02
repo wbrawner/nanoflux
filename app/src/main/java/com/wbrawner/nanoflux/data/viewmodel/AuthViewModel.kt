@@ -2,8 +2,7 @@ package com.wbrawner.nanoflux.data.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wbrawner.nanoflux.data.model.User
-import com.wbrawner.nanoflux.data.repository.UserRepository
+import com.wbrawner.nanoflux.network.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -84,7 +83,7 @@ class AuthViewModel @Inject constructor(
 
     sealed class AuthState {
         object Loading : AuthState()
-        class Authenticated(val user: User) : AuthState()
+        class Authenticated(val user: com.wbrawner.nanoflux.storage.model.User) : AuthState()
         class Unauthenticated(
             val server: String = "",
             val username: String = "",

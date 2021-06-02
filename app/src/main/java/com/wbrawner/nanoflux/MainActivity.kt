@@ -4,17 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.wbrawner.nanoflux.data.model.Entry
-import com.wbrawner.nanoflux.data.model.Feed
 import com.wbrawner.nanoflux.data.viewmodel.AuthViewModel
 import com.wbrawner.nanoflux.ui.MainScreen
 import com.wbrawner.nanoflux.ui.auth.AuthScreen
@@ -55,17 +49,4 @@ fun AppPreview() {
     NanofluxApp {
 
     }
-}
-
-@Composable
-fun EntryListItem(
-    entry: Entry,
-    feed: Feed,
-    onEntryItemClicked: (entry: Entry) -> Unit,
-    onFeedClicked: (feed: Feed) -> Unit,
-    onToggleReadClicked: (entry: Entry) -> Unit,
-    onStarClicked: (entry: Entry) -> Unit,
-    onExternalLinkClicked: (entry: Entry) -> Unit
-) {
-
 }
