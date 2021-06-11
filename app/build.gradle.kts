@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.lifecycle)
     implementation(libs.hilt.android.core)
     kapt(libs.hilt.android.kapt)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work.core)
     kapt(libs.hilt.work.kapt)
     implementation(libs.work.core)

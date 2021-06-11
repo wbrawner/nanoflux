@@ -5,6 +5,7 @@ import com.wbrawner.nanoflux.network.repository.PREF_KEY_AUTH_TOKEN
 import com.wbrawner.nanoflux.storage.model.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
@@ -166,6 +167,9 @@ data class CreateFeedResponse(@SerialName("feed_id") val feedId: Long)
 @Serializable
 data class EntryResponse(val total: Long, val entries: List<Entry>)
 
+@Serializable
+data class UpdateEntryRequest(@SerialName("entry_ids") val entryIds: List<Long>, val status: Entry.Status)
+
 @Suppress("unused")
 class KtorMinifluxApiService @Inject constructor(
     private val sharedPreferences: SharedPreferences,
@@ -185,7 +189,7 @@ class KtorMinifluxApiService @Inject constructor(
                 }
 
             }
-            level = LogLevel.ALL
+            level = LogLevel.HEADERS
         }
     }
     private val _baseUrl: AtomicReference<String?> = AtomicReference()
@@ -276,6 +280,7 @@ class KtorMinifluxApiService @Inject constructor(
         }
 
     override suspend fun updateFeed(id: Long, feed: FeedJson): Feed = client.put(url("feeds/$id")) {
+        contentType(ContentType.Application.Json)
         body = feed
     }
 
@@ -362,10 +367,8 @@ class KtorMinifluxApiService @Inject constructor(
 
     override suspend fun updateEntries(entryIds: List<Long>, status: Entry.Status): HttpResponse =
         client.put(url("entries")) {
-//            body = @Serializable object {
-//                val entry_ids = entryIds
-//                val status = status
-//            }
+            contentType(ContentType.Application.Json)
+            body = UpdateEntryRequest(entryIds, status)
         }
 
     override suspend fun toggleEntryBookmark(id: Long): HttpResponse =

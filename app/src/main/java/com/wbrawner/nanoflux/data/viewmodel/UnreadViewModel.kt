@@ -5,32 +5,36 @@ import androidx.lifecycle.viewModelScope
 import com.wbrawner.nanoflux.network.repository.CategoryRepository
 import com.wbrawner.nanoflux.network.repository.EntryRepository
 import com.wbrawner.nanoflux.network.repository.FeedRepository
-import com.wbrawner.nanoflux.network.repository.IconRepository
 import com.wbrawner.nanoflux.storage.model.Entry
 import com.wbrawner.nanoflux.storage.model.EntryAndFeed
-import com.wbrawner.nanoflux.syncAll
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class UnreadViewModel @Inject constructor(
     private val feedRepository: FeedRepository,
     private val categoryRepository: CategoryRepository,
-    private val iconRepository: IconRepository,
     private val entryRepository: EntryRepository,
     private val logger: Timber.Tree
 ) : ViewModel() {
+    private val _loading = MutableStateFlow(false)
+    val loading = _loading.asStateFlow()
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+    val entries = entryRepository.observeUnread()
 
     init {
-        viewModelScope.launch {
-            if (entryRepository.getCount() == 0L) {
-                syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
-            }
-        }
+        logger.v("Unread entryRepo: ${entryRepository}r")
     }
+
+    fun dismissError() {
+        _errorMessage.value = null
+    }
+
+    // TODO: Get Base URL
+    fun getShareUrl(entry: Entry) = "baseUrl/${entry.shareCode}"
 }
