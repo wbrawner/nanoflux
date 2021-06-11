@@ -5,18 +5,20 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -25,6 +27,7 @@ import com.wbrawner.nanoflux.SyncWorker
 import com.wbrawner.nanoflux.data.viewmodel.AuthViewModel
 import com.wbrawner.nanoflux.data.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
+import java.util.*
 
 @Composable
 fun MainScreen(
@@ -32,30 +35,24 @@ fun MainScreen(
     mainViewModel: MainViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    LaunchedEffect(key1 = authViewModel.state) {
-        val workRequest = OneTimeWorkRequestBuilder<SyncWorker>().build()
-        WorkManager.getInstance(context).enqueue(workRequest)
-        mainViewModel.loadUnread()
+    LaunchedEffect(key1 = context) {
+        WorkManager.getInstance(context)
+            .enqueue(OneTimeWorkRequestBuilder<SyncWorker>().build())
     }
-    val state = mainViewModel.state.collectAsState()
     val navController = rememberNavController()
     MainScaffold(
-        state.value,
         navController,
-        {
-
-        },
-        {},
-        {},
-        {},
-        {},
-        {}
+        { navController.navigate("unread") },
+        { navController.navigate("starred") },
+        { navController.navigate("history") },
+        { navController.navigate("feeds") },
+        { navController.navigate("categories") },
+        { navController.navigate("settings") },
     )
 }
 
 @Composable
 fun MainScaffold(
-    state: MainViewModel.FeedState,
     navController: NavHostController,
     onUnreadClicked: () -> Unit,
     onStarredClicked: () -> Unit,
@@ -64,40 +61,60 @@ fun MainScaffold(
     onCategoriesClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
 ) {
-    val scaffoldState = rememberScaffoldState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val coroutineScope = rememberCoroutineScope()
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
-            TopAppBar(navigationIcon = {
-                IconButton(onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } }) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu"
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = { coroutineScope.launch { scaffoldState.drawerState.open() } }) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu"
+                        )
+                    }
+                },
+                title = {
+                    Text(
+                        text = navController.currentDestination?.displayName?.capitalize(Locale.ENGLISH)
+                            ?: "Unread"
                     )
-                }
-            }, title = { Text(text = "Unread") })
+                })
         },
         drawerContent = {
             DrawerButton(onClick = onUnreadClicked, icon = Icons.Default.Email, text = "Unread")
             DrawerButton(onClick = onStarredClicked, icon = Icons.Default.Star, text = "Starred")
-            DrawerButton(onClick = onHistoryClicked, icon = Icons.Default.DateRange, text = "History")
+            DrawerButton(
+                onClick = onHistoryClicked,
+                icon = Icons.Default.DateRange,
+                text = "History"
+            )
             DrawerButton(onClick = onFeedsClicked, icon = Icons.Default.List, text = "Feeds")
-            DrawerButton(onClick = onCategoriesClicked, icon = Icons.Default.Info, text = "Categories")
-            DrawerButton(onClick = onSettingsClicked, icon = Icons.Default.Settings, text = "Settings")
+            DrawerButton(
+                onClick = onCategoriesClicked,
+                icon = Icons.Default.Info,
+                text = "Categories"
+            )
+            DrawerButton(
+                onClick = onSettingsClicked,
+                icon = Icons.Default.Settings,
+                text = "Settings"
+            )
         }
     ) {
-        when (state) {
-            is MainViewModel.FeedState.Loading -> CircularProgressIndicator()
-            is MainViewModel.FeedState.Failed -> Text("TODO: Failed to load entries: ${state.errorMessage}")
-            is MainViewModel.FeedState.Success -> EntryList(
-                entries = state.entries,
-                onEntryItemClicked = { /*TODO*/ },
-                onFeedClicked = { /*TODO*/ },
-                onToggleReadClicked = { /*TODO*/ },
-                onStarClicked = { /*TODO*/ }) {
+        // TODO: Extract routes to constants
+        NavHost(navController, startDestination = "unread") {
+            composable("unread") {
+                UnreadScreen(navController, snackbarHostState, hiltViewModel())
             }
-            is MainViewModel.FeedState.Empty -> Text("TODO: No entries")
+            composable(
+                "entries/{entryId}",
+                arguments = listOf(navArgument("entryId") { type = NavType.LongType })
+            ) {
+                EntryScreen(it.arguments!!.getLong("entryId"), hiltViewModel())
+            }
         }
     }
 }
@@ -132,6 +149,6 @@ fun DrawerButton(onClick: () -> Unit, icon: ImageVector, text: String) {
 fun MainScaffold_Preview() {
     NanofluxApp {
         val navController = rememberNavController()
-        MainScaffold(MainViewModel.FeedState.Loading, navController, {}, {}, {}, {}, {}, {})
+        MainScaffold(navController, {}, {}, {}, {}, {}, {})
     }
 }

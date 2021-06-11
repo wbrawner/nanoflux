@@ -38,7 +38,7 @@ class UserRepository @Inject constructor(
         var correctedServer = if (server.startsWith("http")) {
             server
         } else {
-            "http://$server"
+            "https://$server"
         }
         if (!correctedServer.endsWith("/v1")) {
             correctedServer = if (correctedServer.endsWith("/")) {

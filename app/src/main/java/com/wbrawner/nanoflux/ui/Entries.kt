@@ -34,6 +34,7 @@ fun EntryList(
     onStarClicked: (entry: Entry) -> Unit,
     onExternalLinkClicked: (entry: Entry) -> Unit
 ) {
+    // TODO: Add pull to refresh
     LazyColumn {
         items(entries) { entry ->
             EntryListItem(
@@ -209,8 +210,9 @@ private const val MILLIS_IN_WEEK = 604_800_000.0
 private const val MILLIS_IN_MONTH = 2_628_000_000.0
 private const val MILLIS_IN_YEAR = 31_540_000_000.0
 
+val now = GregorianCalendar().timeInMillis
 fun Date.timeSince(): String {
-    val difference = System.currentTimeMillis() - time
+    val difference = now - time
     return when {
         difference >= MILLIS_IN_YEAR -> "${(difference / MILLIS_IN_YEAR).roundToInt()} years ago"
         difference >= MILLIS_IN_MONTH -> "${(difference / MILLIS_IN_MONTH).roundToInt()} months ago"

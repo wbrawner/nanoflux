@@ -12,6 +12,7 @@ import com.wbrawner.nanoflux.network.repository.IconRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltWorker
@@ -33,14 +34,9 @@ class SyncWorker @AssistedInject constructor(
 
     override fun doWork(): Result {
         return runBlocking {
+            Timber.v("Unread entryRepo: ${entryRepository}r")
             try {
-                categoryRepository.getAll(true)
-                feedRepository.getAll(true).forEach {
-                    if (it.feed.iconId != null) {
-                        iconRepository.getFeedIcon(it.feed.id)
-                    }
-                }
-                entryRepository.getAll(true)
+                syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
                 Result.success()
             } catch (e: Exception) {
                Result.failure(Data.Builder().putString("message", e.message?: "Unknown failure").build())
