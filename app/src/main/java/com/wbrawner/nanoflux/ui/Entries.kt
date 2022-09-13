@@ -86,7 +86,8 @@ fun EntryListItem(
                 feed.icon?.let {
                     val bytes = Base64.decode(it.data.substringAfter(","), Base64.DEFAULT)
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        .asImageBitmap()
+                        ?.asImageBitmap()
+                        ?: return@let
                     Image(
                         modifier = Modifier
                             .width(16.dp)

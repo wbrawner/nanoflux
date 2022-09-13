@@ -4,16 +4,17 @@ import android.content.SharedPreferences
 import com.wbrawner.nanoflux.network.repository.PREF_KEY_AUTH_TOKEN
 import com.wbrawner.nanoflux.storage.model.*
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.logging.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
 import java.util.concurrent.atomic.AtomicReference
@@ -176,8 +177,8 @@ class KtorMinifluxApiService @Inject constructor(
     private val _logger: Timber.Tree
 ) : MinifluxApiService {
     private val client = HttpClient(CIO) {
-        install(JsonFeature) {
-            serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
+        install(ContentNegotiation) {
+            json(Json {
                 isLenient = true
                 ignoreUnknownKeys = true
             })
@@ -230,17 +231,17 @@ class KtorMinifluxApiService @Inject constructor(
         userAgent: String?,
         fetchViaProxy: Boolean?
     ): DiscoverResponse = client.post(url("discover")) {
-        body = DiscoverRequest(url, username, password, userAgent, fetchViaProxy)
+        setBody(DiscoverRequest(url, username, password, userAgent, fetchViaProxy))
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
     override suspend fun getFeeds(): List<FeedJson> = client.get(url("feeds")) {
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
     override suspend fun getCategoryFeeds(categoryId: Long): List<FeedJson> =
         client.get(baseUrl + "categories/$categoryId/feeds") {
@@ -250,13 +251,13 @@ class KtorMinifluxApiService @Inject constructor(
                     sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
                 )
             }
-        }
+        }.body()
 
     override suspend fun getFeed(id: Long): FeedJson = client.get(url("feeds/$id")) {
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
     override suspend fun getFeedIcon(feedId: Long): Feed.Icon =
         client.get(url("feeds/$feedId/icon")) {
@@ -266,23 +267,23 @@ class KtorMinifluxApiService @Inject constructor(
                     sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
                 )
             }
-        }
+        }.body()
 
     override suspend fun createFeed(url: String, categoryId: Long?): CreateFeedResponse =
         client.post(url("feeds")) {
-            body = FeedRequest(url, categoryId)
+            setBody(FeedRequest(url, categoryId))
             headers {
                 header(
                     "Authorization",
                     sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
                 )
             }
-        }
+        }.body()
 
     override suspend fun updateFeed(id: Long, feed: FeedJson): Feed = client.put(url("feeds/$id")) {
         contentType(ContentType.Application.Json)
-        body = feed
-    }
+        setBody(feed)
+    }.body()
 
     override suspend fun refreshFeeds(): HttpResponse = client.put(url("feeds/refresh"))
 
@@ -320,10 +321,10 @@ class KtorMinifluxApiService @Inject constructor(
             "search" to search,
             "category_id" to categoryId,
         )
-    )
+    ).body()
 
     override suspend fun getFeedEntry(feedId: Long, entryId: Long): Entry =
-        client.get(url("feeds/$feedId/entries/$entryId"))
+        client.get(url("feeds/$feedId/entries/$entryId")).body()
 
     override suspend fun getEntries(
         status: List<Entry.Status>?,
@@ -358,9 +359,9 @@ class KtorMinifluxApiService @Inject constructor(
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
-    override suspend fun getEntry(entryId: Long): Entry = client.get(url("entries/$entryId"))
+    override suspend fun getEntry(entryId: Long): Entry = client.get(url("entries/$entryId")).body()
 
     override suspend fun markFeedEntriesAsRead(id: Long): HttpResponse =
         client.put(url("feeds/$id/mark-all-as-read"))
@@ -368,7 +369,7 @@ class KtorMinifluxApiService @Inject constructor(
     override suspend fun updateEntries(entryIds: List<Long>, status: Entry.Status): HttpResponse =
         client.put(url("entries")) {
             contentType(ContentType.Application.Json)
-            body = UpdateEntryRequest(entryIds, status)
+            setBody(UpdateEntryRequest(entryIds, status))
         }
 
     override suspend fun toggleEntryBookmark(id: Long): HttpResponse =
@@ -378,20 +379,20 @@ class KtorMinifluxApiService @Inject constructor(
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
     override suspend fun createCategory(title: String): Category = client.post(url("categories")) {
 //        body = @Serializable object {
 //            val title = title
 //        }
-    }
+    }.body()
 
     override suspend fun updateCategory(id: Long, title: String): Category =
         client.put(url("categories/$id")) {
 //            body = @Serializable object {
 //                val title = title
 //            }
-        }
+        }.body()
 
     override suspend fun deleteCategory(id: Long): HttpResponse =
         client.delete(url("categories/$id"))
@@ -415,11 +416,11 @@ class KtorMinifluxApiService @Inject constructor(
         headers {
             header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
         }
-    }
+    }.body()
 
-    override suspend fun getUser(id: Long): User = client.get(url("users/$id"))
+    override suspend fun getUser(id: Long): User = client.get(url("users/$id")).body()
 
-    override suspend fun getUserByName(name: String): User = client.get(url("users/$name"))
+    override suspend fun getUserByName(name: String): User = client.get(url("users/$name")).body()
 
     override suspend fun getUses(): List<User> {
         TODO("Not yet implemented")

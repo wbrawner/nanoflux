@@ -4,10 +4,10 @@ buildscript {
         google()
         mavenCentral()
     }
-    val hiltVersion by extra("2.36")
-    val kotlinVersion by extra("1.4.32")
+    val hiltVersion by extra("2.43.2")
+    val kotlinVersion by extra("1.7.10")
     dependencies {
-        classpath("com.android.tools.build:gradle:7.0.0-beta03")
+        classpath("com.android.tools.build:gradle:7.2.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
         classpath("com.google.dagger:hilt-android-gradle-plugin:$hiltVersion")
     }

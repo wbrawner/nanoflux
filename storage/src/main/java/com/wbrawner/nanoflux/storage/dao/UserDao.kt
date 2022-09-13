@@ -3,6 +3,7 @@ package com.wbrawner.nanoflux.storage.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import com.wbrawner.nanoflux.storage.model.User
 
@@ -14,7 +15,7 @@ interface UserDao {
     @Query("SELECT * FROM User WHERE id in (:ids)")
     suspend fun getAllByIds(vararg ids: Long): List<User>
 
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insertAll(vararg users: User)
 
     @Delete

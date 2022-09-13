@@ -12,6 +12,8 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import java.lang.RuntimeException
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -83,34 +85,31 @@ data class EntryAndFeed(
 )
 
 object ISODateSerializer : KSerializer<Date> {
-    val dateFormat = object : ThreadLocal<SimpleDateFormat>() {
-        override fun initialValue(): SimpleDateFormat =
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ", Locale.ENGLISH)
-    }
-    val altDateFormat = object : ThreadLocal<SimpleDateFormat>() {
-        override fun initialValue(): SimpleDateFormat =
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.ENGLISH)
-    }
-    val altDateFormat2 = object : ThreadLocal<SimpleDateFormat>() {
-        override fun initialValue(): SimpleDateFormat =
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH)
+    val dateFormats = object : ThreadLocal<List<SimpleDateFormat>>() {
+        override fun initialValue(): List<SimpleDateFormat> = listOf(
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ", Locale.ENGLISH),
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.ENGLISH),
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH),
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH),
+        )
     }
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("Date", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Date) =
-        encoder.encodeString(dateFormat.get()!!.format(value))
+        encoder.encodeString(dateFormats.get()!!.first().format(value))
 
     override fun deserialize(decoder: Decoder): Date {
         val dateString = decoder.decodeString()
-        return try {
-            dateFormat.get()!!.parse(dateString)!!
-        } catch (e: Exception) {
+        var exception: ParseException? = null
+        dateFormats.get()!!.forEach { dateFormat ->
             try {
-                altDateFormat.get()!!.parse(dateString)!!
-            } catch (e: Exception) {
-                altDateFormat2.get()!!.parse(dateString)!!
+                return dateFormat.parse(dateString)!!
+            } catch (ignored: ParseException) {
+                // move onto the next format
+                exception = ignored
             }
         }
+        throw RuntimeException(exception)
     }
 }

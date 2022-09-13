@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -28,8 +29,10 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (entryRepository.getCount() == 0L) {
-                syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
+            withContext(Dispatchers.IO) {
+                if (entryRepository.getCount() == 0L) {
+                    syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
+                }
             }
         }
     }
