@@ -11,11 +11,15 @@ interface EntryDao {
     fun getCount(): Long
 
     @Transaction
-    @Query("SELECT * FROM Entry ORDER BY createdAt DESC")
+    @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
     fun observeAll(): Flow<List<EntryAndFeed>>
 
     @Transaction
-    @Query("SELECT * FROM Entry ORDER BY createdAt DESC")
+    @Query("SELECT * FROM Entry WHERE status = \"UNREAD\" ORDER BY publishedAt DESC")
+    fun observeUnread(): Flow<List<EntryAndFeed>>
+
+    @Transaction
+    @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
     fun getAll(): List<EntryAndFeed>
 
     @Transaction

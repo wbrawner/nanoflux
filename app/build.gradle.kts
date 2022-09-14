@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.accompanist.swiperefresh)
     implementation(libs.bundles.compose)
     implementation(libs.lifecycle)
     implementation(libs.hilt.android.core)

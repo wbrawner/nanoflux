@@ -1,7 +1,10 @@
 package com.wbrawner.nanoflux.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.wbrawner.nanoflux.data.viewmodel.UnreadViewModel
@@ -17,30 +20,30 @@ fun UnreadScreen(
     val errorMessage by unreadViewModel.errorMessage.collectAsState()
     val entries by unreadViewModel.entries.collectAsState(emptyList())
     val coroutineScope = rememberCoroutineScope()
-    if (loading) {
-        CircularProgressIndicator()
-    }
     errorMessage?.let {
         coroutineScope.launch {
             when (snackbarHostState.showSnackbar(it, "Retry")) {
-//                SnackbarResult.ActionPerformed -> unreadViewModel.loadUnread()
+                SnackbarResult.ActionPerformed -> unreadViewModel.refresh()
                 else -> unreadViewModel.dismissError()
             }
         }
     }
-    if (entries.isEmpty()) {
-        Text("TODO: No entries")
-    } else {
-        EntryList(
-            entries = entries,
-            onEntryItemClicked = {
-                navController.navigate("entries/${it.id}")
-            },
-            onFeedClicked = {
-                navController.navigate("feeds/${it.id}")
-            },
-            onToggleReadClicked = { /*TODO*/ },
-            onStarClicked = { /*TODO*/ }) {
+    EntryList(
+        entries = entries,
+        onEntryItemClicked = {
+            navController.navigate("entries/${it.id}")
+        },
+        onFeedClicked = {
+            navController.navigate("feeds/${it.id}")
+        },
+        onToggleReadClicked = { /*TODO*/ },
+        onStarClicked = { /*TODO*/ },
+        onExternalLinkClicked = {
+            LocalContext.current.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.url)))
+        },
+        isRefreshing = loading,
+        onRefresh = {
+            unreadViewModel.refresh()
         }
-    }
+    )
 }

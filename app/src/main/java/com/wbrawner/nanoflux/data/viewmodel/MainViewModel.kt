@@ -6,15 +6,10 @@ import com.wbrawner.nanoflux.network.repository.CategoryRepository
 import com.wbrawner.nanoflux.network.repository.EntryRepository
 import com.wbrawner.nanoflux.network.repository.FeedRepository
 import com.wbrawner.nanoflux.network.repository.IconRepository
-import com.wbrawner.nanoflux.storage.model.Entry
-import com.wbrawner.nanoflux.storage.model.EntryAndFeed
 import com.wbrawner.nanoflux.syncAll
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -28,11 +23,9 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     init {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                if (entryRepository.getCount() == 0L) {
-                    syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            if (entryRepository.getCount() == 0L) {
+                syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
             }
         }
     }

@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.wbrawner.nanoflux.NanofluxApp
 import com.wbrawner.nanoflux.storage.model.*
 import java.util.*
@@ -32,20 +34,26 @@ fun EntryList(
     onFeedClicked: (feed: Feed) -> Unit,
     onToggleReadClicked: (entry: Entry) -> Unit,
     onStarClicked: (entry: Entry) -> Unit,
-    onExternalLinkClicked: (entry: Entry) -> Unit
+    onExternalLinkClicked: @Composable (entry: Entry) -> Unit,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit
 ) {
-    // TODO: Add pull to refresh
-    LazyColumn {
-        items(entries) { entry ->
-            EntryListItem(
-                entry.entry,
-                entry.feed,
-                onEntryItemClicked,
-                onFeedClicked,
-                onToggleReadClicked,
-                onStarClicked,
-                onExternalLinkClicked
-            )
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing = isRefreshing),
+        onRefresh = onRefresh
+    ) {
+        LazyColumn {
+            items(entries) { entry ->
+                EntryListItem(
+                    entry.entry,
+                    entry.feed,
+                    onEntryItemClicked,
+                    onFeedClicked,
+                    onToggleReadClicked,
+                    onStarClicked,
+                    onExternalLinkClicked
+                )
+            }
         }
     }
 }
@@ -58,7 +66,7 @@ fun EntryListItem(
     onFeedClicked: (feed: Feed) -> Unit,
     onToggleReadClicked: (entry: Entry) -> Unit,
     onStarClicked: (entry: Entry) -> Unit,
-    onExternalLinkClicked: (entry: Entry) -> Unit
+    onExternalLinkClicked: @Composable (entry: Entry) -> Unit
 ) {
 //    val swipeState = rememberSwipeableState(initialValue = entry.status)
     Column(
@@ -121,13 +129,15 @@ fun EntryListItem(
             }
             val context = LocalContext.current
             IconButton(onClick = {
-                context.startActivity(Intent(Intent.ACTION_SEND).apply {
+                val intent = Intent(Intent.ACTION_SEND).apply {
                     // TODO: Get base url from viewmodel or something
+                    type = "text/plain"
                     putExtra(
                         Intent.EXTRA_TEXT,
                         "https://wbrawner.com/entry/share/${entry.shareCode}"
                     )
-                })
+                }
+                context.startActivity(Intent.createChooser(intent, null))
             }) {
                 Icon(
                     imageVector = Icons.Default.Share,

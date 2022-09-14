@@ -37,4 +37,12 @@ class UnreadViewModel @Inject constructor(
 
     // TODO: Get Base URL
     fun getShareUrl(entry: Entry) = "baseUrl/${entry.shareCode}"
+
+    fun refresh() = viewModelScope.launch(Dispatchers.IO) {
+        _loading.emit(true)
+        feedRepository.getAll(fetch = true)
+        categoryRepository.getAll(fetch = true)
+        entryRepository.getAll(fetch = true)
+        _loading.emit(false)
+    }
 }

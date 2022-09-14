@@ -14,11 +14,11 @@ class EntryRepository @Inject constructor(
     private val entryDao: EntryDao,
     private val logger: Timber.Tree
 ) {
-    fun observeUnread(): Flow<List<EntryAndFeed>> = entryDao.observeAll()
+    fun observeUnread(): Flow<List<EntryAndFeed>> = entryDao.observeUnread()
 
     fun getCount(): Long = entryDao.getCount()
 
-    suspend fun getAll(fetch: Boolean = false, afterId: Long = 0): List<EntryAndFeed> {
+    suspend fun getAll(fetch: Boolean = false, afterId: Long? = null): List<EntryAndFeed> {
         if (fetch) {
             getEntries { page ->
                 apiService.getEntries(
@@ -76,4 +76,10 @@ class EntryRepository @Inject constructor(
             totalPages = response.total / 100
         }
     }
+}
+
+enum class EntryStatus {
+    UNREAD,
+    STARRED,
+    HISTORY
 }

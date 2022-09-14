@@ -109,6 +109,12 @@ fun MainScaffold(
             composable("unread") {
                 UnreadScreen(navController, snackbarHostState, hiltViewModel())
             }
+            composable("starred") {
+                UnreadScreen(navController, snackbarHostState, hiltViewModel())
+            }
+            composable("history") {
+                UnreadScreen(navController, snackbarHostState, hiltViewModel())
+            }
             composable(
                 "entries/{entryId}",
                 arguments = listOf(navArgument("entryId") { type = NavType.LongType })

@@ -7,7 +7,7 @@ import com.wbrawner.nanoflux.storage.model.FeedCategoryIcon
 @Dao
 interface FeedDao {
     @Transaction
-    @Query("SELECT * FROM Feed")
+    @Query("SELECT * FROM Feed ORDER BY title ASC")
     fun getAll(): List<FeedCategoryIcon>
 
     @Transaction
