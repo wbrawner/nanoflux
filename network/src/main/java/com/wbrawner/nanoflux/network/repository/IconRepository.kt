@@ -5,7 +5,9 @@ import com.wbrawner.nanoflux.storage.dao.IconDao
 import com.wbrawner.nanoflux.storage.model.Feed
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class IconRepository @Inject constructor(
     private val apiService: MinifluxApiService,
     private val iconDao: IconDao,

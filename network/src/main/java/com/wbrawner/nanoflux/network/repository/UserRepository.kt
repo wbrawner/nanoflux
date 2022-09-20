@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
 const val PREF_KEY_AUTH_TOKEN = "authToken"
 const val PREF_KEY_CURRENT_USER = "currentUser"
 
+@Singleton
 class UserRepository @Inject constructor(
     private val sharedPreferences: SharedPreferences,
     private val apiService: MinifluxApiService,
@@ -52,9 +54,8 @@ class UserRepository @Inject constructor(
             Base64.DEFAULT or Base64.NO_WRAP
         )
             .decodeToString()
-        apiService.setBaseUrl(correctedServer)
+        apiService.baseUrl = correctedServer
         sharedPreferences.edit {
-            putString(PREF_KEY_BASE_URL, correctedServer)
             putString(PREF_KEY_AUTH_TOKEN, "Basic $credentials")
         }
         try {

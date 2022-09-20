@@ -1,8 +1,9 @@
 package com.wbrawner.nanoflux.ui
 
-import android.content.Intent
 import android.graphics.BitmapFactory
 import android.util.Base64
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,14 +11,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -27,6 +32,10 @@ import com.wbrawner.nanoflux.storage.model.*
 import java.util.*
 import kotlin.math.roundToInt
 
+@OptIn(
+    ExperimentalMaterialApi::class, ExperimentalAnimationApi::class,
+    ExperimentalFoundationApi::class
+)
 @Composable
 fun EntryList(
     entries: List<EntryAndFeed>,
@@ -34,7 +43,8 @@ fun EntryList(
     onFeedClicked: (feed: Feed) -> Unit,
     onToggleReadClicked: (entry: Entry) -> Unit,
     onStarClicked: (entry: Entry) -> Unit,
-    onExternalLinkClicked: @Composable (entry: Entry) -> Unit,
+    onShareClicked: (entry: Entry) -> Unit,
+    onExternalLinkClicked: (entry: Entry) -> Unit,
     isRefreshing: Boolean,
     onRefresh: () -> Unit
 ) {
@@ -43,16 +53,58 @@ fun EntryList(
         onRefresh = onRefresh
     ) {
         LazyColumn {
-            items(entries) { entry ->
-                EntryListItem(
-                    entry.entry,
-                    entry.feed,
-                    onEntryItemClicked,
-                    onFeedClicked,
-                    onToggleReadClicked,
-                    onStarClicked,
-                    onExternalLinkClicked
-                )
+            items(entries, { entry -> entry.entry.id }) { entry ->
+                val dismissState = rememberDismissState()
+                LaunchedEffect(key1 = dismissState.currentValue) {
+                    when (dismissState.currentValue) {
+                        DismissValue.DismissedToStart -> onToggleReadClicked(entry.entry)
+                        DismissValue.DismissedToEnd -> {
+                            onStarClicked(entry.entry)
+                            dismissState.reset()
+                        }
+                        DismissValue.Default -> {}
+                    }
+                }
+                SwipeToDismiss(
+                    modifier = Modifier.animateItemPlacement(),
+                    state = dismissState,
+                    background = {
+                        val (color, text, icon) = when (dismissState.dismissDirection) {
+                            DismissDirection.StartToEnd ->
+                                if (entry.entry.starred) {
+                                    Triple(Color.Yellow, "Unstarred", Icons.Outlined.Star)
+                                } else {
+                                    Triple(Color.Yellow, "Starred", Icons.Filled.Star)
+                                }
+                            DismissDirection.EndToStart -> Triple(
+                                Color.Green,
+                                "Read",
+                                Icons.Default.Email
+                            )
+                            else -> Triple(MaterialTheme.colors.surface, "", Icons.Default.Info)
+                        }
+                        Surface(modifier = Modifier.fillMaxSize(), color = color) {
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Image(imageVector = icon, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(text)
+                            }
+                        }
+                    }
+                ) {
+                    EntryListItem(
+                        entry.entry,
+                        entry.feed,
+                        onEntryItemClicked,
+                        onFeedClicked = onFeedClicked,
+                        onExternalLinkClicked = onExternalLinkClicked,
+                        onShareClicked = onShareClicked,
+                    )
+                }
             }
         }
     }
@@ -64,85 +116,75 @@ fun EntryListItem(
     feed: FeedCategoryIcon,
     onEntryItemClicked: (entry: Entry) -> Unit,
     onFeedClicked: (feed: Feed) -> Unit,
-    onToggleReadClicked: (entry: Entry) -> Unit,
-    onStarClicked: (entry: Entry) -> Unit,
-    onExternalLinkClicked: @Composable (entry: Entry) -> Unit
+    onExternalLinkClicked: (entry: Entry) -> Unit,
+    onShareClicked: (entry: Entry) -> Unit
 ) {
-//    val swipeState = rememberSwipeableState(initialValue = entry.status)
-    Column(
+    Surface(
         modifier = Modifier
-            .padding(vertical = 8.dp, horizontal = 16.dp)
-            .clickable { onEntryItemClicked(entry) }
-//            .swipeable(state = swipeState, orientation = Orientation.Horizontal)
+            .clickable { onEntryItemClicked(entry) },
+        color = MaterialTheme.colors.surface
     ) {
-        Row {
-            Text(
-                modifier = Modifier.weight(1f),
-                text = entry.title,
-                style = MaterialTheme.typography.h6
-            )
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
         ) {
-            TextButton(
-                onClick = { onFeedClicked(feed.feed) },
-                modifier = Modifier.padding(start = 0.dp),
-            ) {
-                feed.icon?.let {
-                    val bytes = Base64.decode(it.data.substringAfter(","), Base64.DEFAULT)
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        ?.asImageBitmap()
-                        ?: return@let
-                    Image(
-                        modifier = Modifier
-                            .width(16.dp)
-                            .height(16.dp),
-                        bitmap = bitmap,
-                        contentDescription = null,
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
+            Row {
                 Text(
-                    text = feed.feed.title,
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurface
+                    modifier = Modifier.weight(1f),
+                    text = entry.title,
+                    style = MaterialTheme.typography.h6
                 )
             }
-//            Text(text = feed.category.title)
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = entry.publishedAt.timeSince(), style = MaterialTheme.typography.body2)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "${entry.readingTime}m read", style = MaterialTheme.typography.body2)
-            IconButton(onClick = { onStarClicked(entry) }) {
-                Icon(
-                    imageVector = if (entry.starred) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = if (entry.starred) "Starred" else "Not starred"
-                )
-            }
-            val context = LocalContext.current
-            IconButton(onClick = {
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    // TODO: Get base url from viewmodel or something
-                    type = "text/plain"
-                    putExtra(
-                        Intent.EXTRA_TEXT,
-                        "https://wbrawner.com/entry/share/${entry.shareCode}"
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                TextButton(
+                    onClick = { onFeedClicked(feed.feed) },
+                    modifier = Modifier.padding(start = 0.dp),
+                ) {
+                    feed.icon?.let {
+                        val bytes = Base64.decode(it.data.substringAfter(","), Base64.DEFAULT)
+                        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            ?.asImageBitmap()
+                            ?: return@let
+                        Image(
+                            modifier = Modifier
+                                .width(16.dp)
+                                .height(16.dp),
+                            bitmap = bitmap,
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(
+                        text = feed.feed.title,
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface
                     )
                 }
-                context.startActivity(Intent.createChooser(intent, null))
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "Share"
-                )
+//            Text(text = feed.category.title)
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = entry.publishedAt.timeSince(), style = MaterialTheme.typography.body2)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = "${entry.readingTime}m read", style = MaterialTheme.typography.body2)
+                IconButton(onClick = { onExternalLinkClicked(entry) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.OpenInBrowser,
+                        contentDescription = "Open in browser"
+                    )
+                }
+                IconButton(onClick = { onShareClicked(entry) }) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share"
+                    )
+                }
             }
         }
     }
@@ -208,7 +250,7 @@ fun EntryListItem_Preview() {
                     mimeType = "image/png"
                 )
             ),
-            {}, {}, {}, {}, {}
+            {}, {}, {}, {}
         )
     }
 }

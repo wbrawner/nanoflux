@@ -19,6 +19,10 @@ interface EntryDao {
     fun observeUnread(): Flow<List<EntryAndFeed>>
 
     @Transaction
+    @Query("SELECT * FROM Entry WHERE status = \"READ\" ORDER BY publishedAt DESC")
+    fun observeRead(): Flow<List<EntryAndFeed>>
+
+    @Transaction
     @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
     fun getAll(): List<EntryAndFeed>
 

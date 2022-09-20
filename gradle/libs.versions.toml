@@ -18,13 +18,14 @@ versionName = "1.0"
 work = "2.7.1"
 
 [libraries]
-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version = "0.26.3-beta"}
+accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version = "0.26.3-beta" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appcompat" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "compose-compiler" }
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose-ui" }
 compose-material = { module = "androidx.compose.material:material", version.ref = "compose-ui" }
+compose-icons = { module = "androidx.compose.material:material-icons-extended", version.ref = "compose-ui" }
 compose-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
 compose-activity = { module = "androidx.activity:activity-compose", version = "1.5.1" }
 compose-test = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-ui" }
@@ -42,13 +43,13 @@ junit = { module = "junit:junit", version = "4.12" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-reflection = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.4.0"}
-ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
-ktor-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor"}
+kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.4.0" }
+ktor-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
-ktor-logging = { module = "io.ktor:ktor-client-logging-jvm", version.ref = "ktor"}
-ktor-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor"}
+ktor-logging = { module = "io.ktor:ktor-client-logging-jvm", version.ref = "ktor" }
+ktor-serialization = { module = "io.ktor:ktor-client-serialization", version.ref = "ktor" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-kapt = { module = "androidx.room:room-compiler", version.ref = "room" }
 room-test = { module = "androidx.room:room-testing", version.ref = "room" }
@@ -59,7 +60,7 @@ work-core = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 work-test = { module = "androidx.work:work-testing", version.ref = "work" }
 
 [bundles]
-compose = ["compose-compiler", "compose-ui", "compose-material", "compose-tooling", "compose-activity", "navigation-compose"]
+compose = ["compose-compiler", "compose-ui", "compose-material", "compose-icons", "compose-tooling", "compose-activity", "navigation-compose"]
 coroutines = ["coroutines-core", "coroutines-android"]
 networking = ["kotlin-reflection", "kotlinx-serialization", "ktor-core", "ktor-cio", "ktor-content-negotiation", "ktor-json", "ktor-logging", "ktor-serialization"]
 

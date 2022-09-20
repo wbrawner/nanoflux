@@ -5,7 +5,9 @@ import com.wbrawner.nanoflux.storage.dao.CategoryDao
 import com.wbrawner.nanoflux.storage.model.Category
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class CategoryRepository @Inject constructor(
     private val apiService: MinifluxApiService,
     private val categoryDao: CategoryDao,
@@ -20,6 +22,6 @@ class CategoryRepository @Inject constructor(
     }
 
     suspend fun getById(id: Long): Category? = categoryDao.getAllByIds(id).firstOrNull()
-            ?: getAll(true)
+        ?: getAll(true)
             .firstOrNull { it.id == id }
 }

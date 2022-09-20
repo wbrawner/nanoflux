@@ -52,13 +52,14 @@ fun Entry(entry: EntryAndFeed) {
             feed = entry.feed,
             onEntryItemClicked = { /*TODO*/ },
             onFeedClicked = { /*TODO*/ },
-            onToggleReadClicked = { /*TODO*/ },
-            onStarClicked = { /*TODO*/ },
-            onExternalLinkClicked = { /* TODO */ }
+            onExternalLinkClicked = { /*TODO*/ },
+            onShareClicked = { /*TODO*/ },
         )
         // Adds view to Compose
         AndroidView(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             factory = { context ->
                 TextView(context).apply {
                     text = Html.fromHtml(entry.entry.content)

@@ -5,7 +5,9 @@ import com.wbrawner.nanoflux.storage.dao.FeedDao
 import com.wbrawner.nanoflux.storage.model.FeedCategoryIcon
 import timber.log.Timber
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class FeedRepository @Inject constructor(
     private val apiService: MinifluxApiService,
     private val feedDao: FeedDao,

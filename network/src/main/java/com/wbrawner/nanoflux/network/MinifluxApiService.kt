@@ -1,6 +1,7 @@
 package com.wbrawner.nanoflux.network
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.wbrawner.nanoflux.network.repository.PREF_KEY_AUTH_TOKEN
 import com.wbrawner.nanoflux.storage.model.*
 import io.ktor.client.*
@@ -22,7 +23,7 @@ import javax.inject.Inject
 
 
 interface MinifluxApiService {
-    fun setBaseUrl(url: String)
+    var baseUrl: String
 
     suspend fun discoverSubscriptions(
         url: String,
@@ -90,6 +91,8 @@ interface MinifluxApiService {
     suspend fun updateEntries(entryIds: List<Long>, status: Entry.Status): HttpResponse
 
     suspend fun toggleEntryBookmark(id: Long): HttpResponse
+
+    suspend fun shareEntry(entry: Entry): HttpResponse
 
     suspend fun getCategories(): List<Category>
 
@@ -169,7 +172,10 @@ data class CreateFeedResponse(@SerialName("feed_id") val feedId: Long)
 data class EntryResponse(val total: Long, val entries: List<Entry>)
 
 @Serializable
-data class UpdateEntryRequest(@SerialName("entry_ids") val entryIds: List<Long>, val status: Entry.Status)
+data class UpdateEntryRequest(
+    @SerialName("entry_ids") val entryIds: List<Long>,
+    val status: Entry.Status
+)
 
 @Suppress("unused")
 class KtorMinifluxApiService @Inject constructor(
@@ -194,12 +200,18 @@ class KtorMinifluxApiService @Inject constructor(
         }
     }
     private val _baseUrl: AtomicReference<String?> = AtomicReference()
-    private val baseUrl: String
+    override var baseUrl: String
         get() = _baseUrl.get() ?: run {
             sharedPreferences.getString(PREF_KEY_BASE_URL, null)?.let {
                 _baseUrl.set(it)
                 it
             } ?: ""
+        }
+        set(value) {
+            _baseUrl.set(value)
+            sharedPreferences.edit {
+                putString(PREF_KEY_BASE_URL, value)
+            }
         }
 
     private fun url(
@@ -218,10 +230,6 @@ class KtorMinifluxApiService @Inject constructor(
             }
         }
         return url.build()
-    }
-
-    override fun setBaseUrl(url: String) {
-        _baseUrl.set(url)
     }
 
     override suspend fun discoverSubscriptions(
@@ -345,8 +353,8 @@ class KtorMinifluxApiService @Inject constructor(
             "status" to status?.joinToString(",") { it.name.toLowerCase() },
             "offset" to offset,
             "limit" to limit,
-            "order" to order,
-            "direction" to direction,
+            "order" to order?.name?.lowercase(),
+            "direction" to direction?.name?.lowercase(),
             "before" to before,
             "after" to after,
             "before_entry_id" to beforeEntryId,
@@ -374,6 +382,23 @@ class KtorMinifluxApiService @Inject constructor(
 
     override suspend fun toggleEntryBookmark(id: Long): HttpResponse =
         client.put(url("entries/$id/bookmark"))
+
+    override suspend fun shareEntry(entry: Entry): HttpResponse {
+        // This is the only method that doesn't really go through the API because there doesn't
+        // appear to be a documented way of getting the share code, so we have to build the URL
+        // manually
+        val url = URLBuilder(baseUrl).apply {
+            path("entry", "share", entry.id.toString())
+        }.build()
+        return client.get(url) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
+    }
 
     override suspend fun getCategories(): List<Category> = client.get(url("categories")) {
         headers {

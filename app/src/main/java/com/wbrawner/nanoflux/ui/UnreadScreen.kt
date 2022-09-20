@@ -2,8 +2,12 @@ package com.wbrawner.nanoflux.ui
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.SnackbarResult
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -28,6 +32,7 @@ fun UnreadScreen(
             }
         }
     }
+    val context = LocalContext.current
     EntryList(
         entries = entries,
         onEntryItemClicked = {
@@ -36,10 +41,24 @@ fun UnreadScreen(
         onFeedClicked = {
             navController.navigate("feeds/${it.id}")
         },
-        onToggleReadClicked = { /*TODO*/ },
-        onStarClicked = { /*TODO*/ },
+        onToggleReadClicked = { unreadViewModel.toggleRead(it) },
+        onStarClicked = { unreadViewModel.toggleStar(it) },
         onExternalLinkClicked = {
-            LocalContext.current.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.url)))
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.url)))
+        },
+        onShareClicked = { entry ->
+            coroutineScope.launch {
+                unreadViewModel.share(entry)?.let { url ->
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(
+                            Intent.EXTRA_TEXT,
+                            url
+                        )
+                    }
+                    context.startActivity(Intent.createChooser(intent, null))
+                }
+            }
         },
         isRefreshing = loading,
         onRefresh = {
