@@ -35,14 +35,50 @@ class EntryViewModel @Inject constructor(
             _loading.value = true
             _errorMessage.value = null
             try {
-                val entry = entryRepository.getEntry(id)
-                _entry.value = entry
-                _loading.value = false
-                entryRepository.markEntryRead(entry.entry)
+                var markedRead = false
+                entryRepository.getEntry(id).collect {
+                    _entry.value = it
+                    _loading.value = false
+                    if (!markedRead) {
+                        entryRepository.markEntryRead(it.entry)
+                        markedRead = true
+                    }
+                }
             } catch (e: Exception) {
-                _errorMessage.value = e.message?: "Error fetching entry"
+                _errorMessage.value = e.message ?: "Error fetching entry"
                 _loading.value = false
                 logger.e(e)
+            }
+        }
+    }
+
+    suspend fun share(entry: Entry): String? {
+        // Miniflux API doesn't currently support sharing so we have to send the external link for now
+        // https://github.com/miniflux/v2/issues/844
+//        return withContext(Dispatchers.IO) {
+//            entryRepository.share(entry)
+//        }
+        return entry.url
+    }
+
+    fun toggleRead(entry: Entry) = viewModelScope.launch(Dispatchers.IO) {
+        if (entry.status == Entry.Status.READ) {
+            entryRepository.markEntryUnread(entry)
+        } else if (entry.status == Entry.Status.UNREAD) {
+            entryRepository.markEntryRead(entry)
+        }
+    }
+
+    fun toggleStar(entry: Entry) = viewModelScope.launch(Dispatchers.IO) {
+        entryRepository.toggleStar(entry)
+    }
+
+    fun downloadOriginalContent(entry: Entry) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                entryRepository.download(entry)
+            } catch (e: Exception) {
+                _errorMessage.emit("Failed to fetch original content: ${e.message}")
             }
         }
     }
@@ -50,7 +86,4 @@ class EntryViewModel @Inject constructor(
     fun dismissError() {
         _errorMessage.value = null
     }
-
-    // TODO: Get Base URL
-    fun getShareUrl(entry: Entry) = "baseUrl/${entry.shareCode}"
 }

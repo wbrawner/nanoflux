@@ -15,12 +15,24 @@ interface EntryDao {
     fun observeAll(): Flow<List<EntryAndFeed>>
 
     @Transaction
-    @Query("SELECT * FROM Entry WHERE status = \"UNREAD\" ORDER BY publishedAt DESC")
-    fun observeUnread(): Flow<List<EntryAndFeed>>
-
-    @Transaction
     @Query("SELECT * FROM Entry WHERE status = \"READ\" ORDER BY publishedAt DESC")
     fun observeRead(): Flow<List<EntryAndFeed>>
+
+    @Transaction
+    @Query("SELECT * FROM Entry ORDER BY Entry.publishedAt DESC")
+    fun observeStarred(): Flow<List<EntryAndFeed>>
+
+    @Transaction
+    @Query(
+        """
+        SELECT * FROM Entry 
+        INNER JOIN Feed on Feed.id = Entry.feedId
+        INNER JOIN Category on Category.id = Feed.categoryId
+        WHERE Entry.status = "UNREAD" AND Feed.hideGlobally = 0 AND Category.hideGlobally = 0
+        ORDER BY publishedAt DESC
+        """
+    )
+    fun observeUnread(): Flow<List<EntryAndFeed>>
 
     @Transaction
     @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
@@ -31,8 +43,12 @@ interface EntryDao {
     fun getAllUnread(): List<EntryAndFeed>
 
     @Transaction
-    @Query("SELECT * FROM Entry WHERE id in (:ids) ORDER BY createdAt DESC")
-    fun getAllByIds(vararg ids: Long): List<EntryAndFeed>
+    @Query("SELECT * FROM Entry WHERE id = :id")
+    fun observe(id: Long): Flow<EntryAndFeed>
+
+    @Transaction
+    @Query("SELECT * FROM Entry WHERE id = :id")
+    fun get(id: Long): EntryAndFeed?
 
     @Transaction
     @Query("SELECT * FROM Entry WHERE feedId in (:ids) ORDER BY createdAt DESC")

@@ -9,26 +9,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.wbrawner.nanoflux.data.viewmodel.UnreadViewModel
+import com.wbrawner.nanoflux.data.viewmodel.EntryListViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun UnreadScreen(
+fun EntryListScreen(
     navController: NavController,
     snackbarHostState: SnackbarHostState,
-    unreadViewModel: UnreadViewModel = viewModel()
+    entryListViewModel: EntryListViewModel
 ) {
-    val loading by unreadViewModel.loading.collectAsState()
-    val errorMessage by unreadViewModel.errorMessage.collectAsState()
-    val entries by unreadViewModel.entries.collectAsState(emptyList())
+    val loading by entryListViewModel.loading.collectAsState()
+    val errorMessage by entryListViewModel.errorMessage.collectAsState()
+    val entries by entryListViewModel.entries.collectAsState(emptyList())
     val coroutineScope = rememberCoroutineScope()
     errorMessage?.let {
         coroutineScope.launch {
             when (snackbarHostState.showSnackbar(it, "Retry")) {
-                SnackbarResult.ActionPerformed -> unreadViewModel.refresh()
-                else -> unreadViewModel.dismissError()
+                SnackbarResult.ActionPerformed -> entryListViewModel.refresh()
+                else -> entryListViewModel.dismissError()
             }
         }
     }
@@ -41,14 +40,17 @@ fun UnreadScreen(
         onFeedClicked = {
             navController.navigate("feeds/${it.id}")
         },
-        onToggleReadClicked = { unreadViewModel.toggleRead(it) },
-        onStarClicked = { unreadViewModel.toggleStar(it) },
+        onCategoryClicked = {
+            navController.navigate("categories/${it.id}")
+        },
+        onToggleReadClicked = { entryListViewModel.toggleRead(it) },
+        onStarClicked = { entryListViewModel.toggleStar(it) },
         onExternalLinkClicked = {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it.url)))
         },
         onShareClicked = { entry ->
             coroutineScope.launch {
-                unreadViewModel.share(entry)?.let { url ->
+                entryListViewModel.share(entry)?.let { url ->
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(
@@ -62,7 +64,7 @@ fun UnreadScreen(
         },
         isRefreshing = loading,
         onRefresh = {
-            unreadViewModel.refresh()
+            entryListViewModel.refresh()
         }
     )
 }

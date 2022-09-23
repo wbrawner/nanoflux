@@ -8,7 +8,7 @@ import java.util.*
 
 @Database(
     entities = [com.wbrawner.nanoflux.storage.model.Feed::class, com.wbrawner.nanoflux.storage.model.Entry::class, com.wbrawner.nanoflux.storage.model.Category::class, com.wbrawner.nanoflux.storage.model.Feed.Icon::class, com.wbrawner.nanoflux.storage.model.User::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(DateTypeConverter::class)

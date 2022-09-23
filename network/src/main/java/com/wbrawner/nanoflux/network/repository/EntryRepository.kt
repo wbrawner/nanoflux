@@ -20,6 +20,8 @@ class EntryRepository @Inject constructor(
     private val entryDao: EntryDao,
     private val logger: Timber.Tree
 ) {
+    fun observeRead(): Flow<List<EntryAndFeed>> = entryDao.observeRead()
+    fun observeStarred(): Flow<List<EntryAndFeed>> = entryDao.observeStarred()
     fun observeUnread(): Flow<List<EntryAndFeed>> = entryDao.observeUnread()
 
     fun getCount(): Long = entryDao.getCount()
@@ -52,13 +54,12 @@ class EntryRepository @Inject constructor(
         return entryDao.getAllUnread()
     }
 
-    suspend fun getEntry(id: Long): EntryAndFeed {
-        entryDao.getAllByIds(id).firstOrNull()?.let {
-            return@getEntry it
+    suspend fun getEntry(id: Long): Flow<EntryAndFeed> {
+        val entry = entryDao.observe(id)
+        if (entryDao.get(id) == null) {
+            entryDao.insertAll(apiService.getEntry(id))
         }
-
-        entryDao.insertAll(apiService.getEntry(id))
-        return entryDao.getAllByIds(id).first()
+        return entry
     }
 
     suspend fun markEntryRead(entry: Entry) {
@@ -95,13 +96,18 @@ class EntryRepository @Inject constructor(
         return response.headers[HttpHeaders.Location]
     }
 
+    suspend fun download(entry: Entry) {
+        val response = apiService.fetchOriginalContent(entry)
+        entryDao.update(entry.copy(content = response.content))
+    }
+
     fun getLatestId(): Long = entryDao.getLatestId()
 
     private suspend fun getEntries(request: suspend (page: Int) -> EntryResponse) {
         var page = 0
         var totalPages = 1L
-        while (page++ < totalPages) {
-            val response = request(page)
+        while (page < totalPages) {
+            val response = request(page++)
             entryDao.insertAll(
                 response.entries
             )

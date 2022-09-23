@@ -33,7 +33,8 @@ data class Feed(
     val ignoreHttpCache: Boolean,
     val fetchViaProxy: Boolean,
     val categoryId: Long,
-    val iconId: Long?
+    val iconId: Long?,
+    val hideGlobally: Boolean?
 ) {
     @Entity
     @Serializable
@@ -104,7 +105,9 @@ data class FeedJson(
     val fetchViaProxy: Boolean,
     val category: Category,
     @SerialName("icon")
-    val icon: IconJson?
+    val icon: IconJson?,
+    @SerialName("hide_globally")
+    val hideGlobally: Boolean?
 ) {
     @Serializable
     data class IconJson(
@@ -137,6 +140,7 @@ data class FeedJson(
         ignoreHttpCache,
         fetchViaProxy,
         category.id,
-        icon?.iconId
+        icon?.iconId,
+        hideGlobally
     )
 }

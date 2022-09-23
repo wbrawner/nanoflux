@@ -8,7 +8,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
 import com.wbrawner.nanoflux.data.viewmodel.AuthViewModel
 import com.wbrawner.nanoflux.ui.MainScreen
 import com.wbrawner.nanoflux.ui.auth.AuthScreen
@@ -22,15 +24,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val authenticated = authViewModel.state.collectAsState()
+            val authenticated by authViewModel.state.collectAsState()
             NanofluxApp {
-                if (authenticated.value is AuthViewModel.AuthState.Authenticated) {
+                if (authenticated is AuthViewModel.AuthState.Authenticated) {
                     MainScreen(authViewModel)
                 } else {
                     AuthScreen(authViewModel)
                 }
             }
         }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
     }
 }
 

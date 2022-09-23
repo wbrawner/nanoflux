@@ -7,16 +7,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,6 +21,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wbrawner.nanoflux.NanofluxApp
 import com.wbrawner.nanoflux.data.viewmodel.AuthViewModel
 import com.wbrawner.nanoflux.ui.theme.NanofluxTheme
@@ -31,18 +29,32 @@ import timber.log.Timber
 
 @Composable
 fun AuthScreen(authViewModel: AuthViewModel) {
-    val vmState = authViewModel.state.collectAsState()
-    val state = vmState.value
-    if (state is AuthViewModel.AuthState.Loading) {
-        CircularProgressIndicator()
-    } else if (state is AuthViewModel.AuthState.Unauthenticated) {
-        AuthForm(
-            state.server,
-            state.username,
-            state.password,
-            authViewModel::login,
-            state.errorMessage
-        )
+    val state by authViewModel.state.collectAsState()
+    Column(
+        Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp), horizontalArrangement = Arrangement.Center) {
+            Text(text = "nano", fontSize = 24.sp)
+            Text(text = "flux", color = MaterialTheme.colors.primary, fontSize = 24.sp)
+        }
+        if (state is AuthViewModel.AuthState.Loading) {
+            CircularProgressIndicator()
+        } else if (state is AuthViewModel.AuthState.Unauthenticated) {
+
+            val s = state as AuthViewModel.AuthState.Unauthenticated
+            AuthForm(
+                s.server,
+                s.username,
+                s.password,
+                authViewModel::login,
+                s.errorMessage
+            )
+        }
     }
 }
 

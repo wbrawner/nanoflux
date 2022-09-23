@@ -22,7 +22,9 @@ object StorageModule {
     @Provides
     @Singleton
     fun providesNanofluxDatabase(@ApplicationContext context: Context): NanofluxDatabase =
-        Room.databaseBuilder(context, NanofluxDatabase::class.java, "nanoflux").build()
+        Room.databaseBuilder(context, NanofluxDatabase::class.java, "nanoflux")
+            .fallbackToDestructiveMigrationFrom(1)
+            .build()
 
     @Provides
     @Singleton

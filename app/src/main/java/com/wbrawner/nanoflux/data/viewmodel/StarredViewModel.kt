@@ -9,7 +9,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
-class UnreadViewModel @Inject constructor(
+class StarredViewModel @Inject constructor(
     feedRepository: FeedRepository,
     categoryRepository: CategoryRepository,
     entryRepository: EntryRepository,
@@ -22,5 +22,5 @@ class UnreadViewModel @Inject constructor(
     iconRepository,
     logger
 ) {
-    override val entries = entryRepository.observeUnread()
+    override val entries = entryRepository.observeStarred()
 }

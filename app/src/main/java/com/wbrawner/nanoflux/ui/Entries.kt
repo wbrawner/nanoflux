@@ -8,7 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -21,14 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.google.accompanist.flowlayout.FlowCrossAxisAlignment
+import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.wbrawner.nanoflux.NanofluxApp
 import com.wbrawner.nanoflux.storage.model.*
+import com.wbrawner.nanoflux.ui.theme.Green700
+import com.wbrawner.nanoflux.ui.theme.Yellow700
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -41,6 +47,7 @@ fun EntryList(
     entries: List<EntryAndFeed>,
     onEntryItemClicked: (entry: Entry) -> Unit,
     onFeedClicked: (feed: Feed) -> Unit,
+    onCategoryClicked: (category: Category) -> Unit,
     onToggleReadClicked: (entry: Entry) -> Unit,
     onStarClicked: (entry: Entry) -> Unit,
     onShareClicked: (entry: Entry) -> Unit,
@@ -53,7 +60,7 @@ fun EntryList(
         onRefresh = onRefresh
     ) {
         LazyColumn {
-            items(entries, { entry -> entry.entry.id }) { entry ->
+            itemsIndexed(entries, { _, entry -> entry.entry.id }) { index, entry ->
                 val dismissState = rememberDismissState()
                 LaunchedEffect(key1 = dismissState.currentValue) {
                     when (dismissState.currentValue) {
@@ -72,12 +79,12 @@ fun EntryList(
                         val (color, text, icon) = when (dismissState.dismissDirection) {
                             DismissDirection.StartToEnd ->
                                 if (entry.entry.starred) {
-                                    Triple(Color.Yellow, "Unstarred", Icons.Outlined.Star)
+                                    Triple(Yellow700, "Unstarred", Icons.Outlined.Star)
                                 } else {
-                                    Triple(Color.Yellow, "Starred", Icons.Filled.Star)
+                                    Triple(Yellow700, "Starred", Icons.Filled.Star)
                                 }
                             DismissDirection.EndToStart -> Triple(
-                                Color.Green,
+                                Green700,
                                 "Read",
                                 Icons.Default.Email
                             )
@@ -101,9 +108,13 @@ fun EntryList(
                         entry.feed,
                         onEntryItemClicked,
                         onFeedClicked = onFeedClicked,
+                        onCategoryClicked = onCategoryClicked,
                         onExternalLinkClicked = onExternalLinkClicked,
                         onShareClicked = onShareClicked,
                     )
+                }
+                if (index < entries.lastIndex) {
+                    Divider()
                 }
             }
         }
@@ -116,6 +127,7 @@ fun EntryListItem(
     feed: FeedCategoryIcon,
     onEntryItemClicked: (entry: Entry) -> Unit,
     onFeedClicked: (feed: Feed) -> Unit,
+    onCategoryClicked: (category: Category) -> Unit,
     onExternalLinkClicked: (entry: Entry) -> Unit,
     onShareClicked: (entry: Entry) -> Unit
 ) {
@@ -125,54 +137,39 @@ fun EntryListItem(
         color = MaterialTheme.colors.surface
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Row {
                 Text(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f),
                     text = entry.title,
-                    style = MaterialTheme.typography.h6
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                 )
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
+            FlowRow(
+                crossAxisAlignment = FlowCrossAxisAlignment.Center,
+                modifier = Modifier.fillMaxWidth(),
+                mainAxisSpacing = 8.dp
             ) {
-                TextButton(
-                    onClick = { onFeedClicked(feed.feed) },
-                    modifier = Modifier.padding(start = 0.dp),
-                ) {
-                    feed.icon?.let {
-                        val bytes = Base64.decode(it.data.substringAfter(","), Base64.DEFAULT)
-                        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            ?.asImageBitmap()
-                            ?: return@let
-                        Image(
-                            modifier = Modifier
-                                .width(16.dp)
-                                .height(16.dp),
-                            bitmap = bitmap,
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = feed.feed.title,
-                        style = MaterialTheme.typography.body2,
-                        color = MaterialTheme.colors.onSurface
-                    )
-                }
-//            Text(text = feed.category.title)
+                FeedButton(feed.icon, feed.feed, onFeedClicked)
+                CategoryButton(feed.category, onCategoryClicked)
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
-                Text(text = entry.publishedAt.timeSince(), style = MaterialTheme.typography.body2)
+                val fontStyle = MaterialTheme.typography.body2.copy(
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp
+                )
+                Text(text = entry.publishedAt.timeSince(), style = fontStyle)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "${entry.readingTime}m read", style = MaterialTheme.typography.body2)
+                Text(text = "${entry.readingTime}m read", style = fontStyle)
                 IconButton(onClick = { onExternalLinkClicked(entry) }) {
                     Icon(
                         imageVector = Icons.Outlined.OpenInBrowser,
@@ -187,6 +184,62 @@ fun EntryListItem(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FeedButton(
+    icon: Feed.Icon?,
+    feed: Feed,
+    onFeedClicked: (feed: Feed) -> Unit
+) {
+    TextButton(
+        onClick = { onFeedClicked(feed) },
+        contentPadding = PaddingValues(
+            start = 0.dp,
+            top = ButtonDefaults.ContentPadding.calculateTopPadding(),
+            end = 8.dp,
+            bottom = ButtonDefaults.ContentPadding.calculateBottomPadding()
+        )
+    ) {
+        icon?.let {
+            val bytes = Base64.decode(it.data.substringAfter(","), Base64.DEFAULT)
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                ?.asImageBitmap()
+                ?: return@let
+            Image(
+                modifier = Modifier
+                    .width(16.dp)
+                    .height(16.dp),
+                bitmap = bitmap,
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = feed.title,
+            style = MaterialTheme.typography.body2,
+            fontSize = 12.sp,
+            color = MaterialTheme.colors.onSurface
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun CategoryButton(
+    category: Category,
+    onCategoryClicked: (category: Category) -> Unit
+) {
+    Chip(
+        onClick = { onCategoryClicked(category) },
+    ) {
+        Text(
+            text = category.title,
+            style = MaterialTheme.typography.body2,
+            fontSize = 12.sp,
+            color = MaterialTheme.colors.onSurface
+        )
     }
 }
 
@@ -237,12 +290,14 @@ fun EntryListItem_Preview() {
                     ignoreHttpCache = false,
                     fetchViaProxy = false,
                     categoryId = 0,
-                    iconId = 0
+                    iconId = 0,
+                    hideGlobally = false
                 ),
                 category = Category(
                     id = 2,
                     title = "Category Title",
-                    userId = 0
+                    userId = 0,
+                    hideGlobally = false
                 ),
                 icon = Feed.Icon(
                     id = 0,
@@ -250,7 +305,7 @@ fun EntryListItem_Preview() {
                     mimeType = "image/png"
                 )
             ),
-            {}, {}, {}, {}
+            {}, {}, {}, {}, {}
         )
     }
 }

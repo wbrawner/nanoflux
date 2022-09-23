@@ -13,4 +13,6 @@ data class Category(
     val title: String,
     @SerialName("user_id")
     val userId: Long,
+    @SerialName("hide_globally")
+    val hideGlobally: Boolean?
 )

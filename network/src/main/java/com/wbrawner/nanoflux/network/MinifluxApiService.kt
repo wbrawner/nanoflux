@@ -6,7 +6,7 @@ import com.wbrawner.nanoflux.network.repository.PREF_KEY_AUTH_TOKEN
 import com.wbrawner.nanoflux.storage.model.*
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
@@ -94,6 +94,8 @@ interface MinifluxApiService {
 
     suspend fun shareEntry(entry: Entry): HttpResponse
 
+    suspend fun fetchOriginalContent(entry: Entry): EntryContentResponse
+
     suspend fun getCategories(): List<Category>
 
     suspend fun createCategory(title: String): Category
@@ -172,6 +174,9 @@ data class CreateFeedResponse(@SerialName("feed_id") val feedId: Long)
 data class EntryResponse(val total: Long, val entries: List<Entry>)
 
 @Serializable
+data class EntryContentResponse(val content: String)
+
+@Serializable
 data class UpdateEntryRequest(
     @SerialName("entry_ids") val entryIds: List<Long>,
     val status: Entry.Status
@@ -182,7 +187,7 @@ class KtorMinifluxApiService @Inject constructor(
     private val sharedPreferences: SharedPreferences,
     private val _logger: Timber.Tree
 ) : MinifluxApiService {
-    private val client = HttpClient(CIO) {
+    private val client = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json(Json {
                 isLenient = true
@@ -399,6 +404,16 @@ class KtorMinifluxApiService @Inject constructor(
             }
         }
     }
+
+    override suspend fun fetchOriginalContent(entry: Entry): EntryContentResponse =
+        client.get(url("entries/${entry.id}/fetch-content")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }.body()
 
     override suspend fun getCategories(): List<Category> = client.get(url("categories")) {
         headers {
