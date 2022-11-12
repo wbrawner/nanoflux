@@ -45,7 +45,6 @@ fun AuthScreen(authViewModel: AuthViewModel) {
         if (state is AuthViewModel.AuthState.Loading) {
             CircularProgressIndicator()
         } else if (state is AuthViewModel.AuthState.Unauthenticated) {
-
             val s = state as AuthViewModel.AuthState.Unauthenticated
             AuthForm(
                 s.server,
