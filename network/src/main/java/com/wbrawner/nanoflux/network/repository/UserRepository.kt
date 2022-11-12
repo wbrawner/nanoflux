@@ -6,8 +6,8 @@ import androidx.core.content.edit
 import com.wbrawner.nanoflux.network.MinifluxApiService
 import com.wbrawner.nanoflux.network.PREF_KEY_BASE_URL
 import com.wbrawner.nanoflux.storage.dao.UserDao
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -24,10 +24,12 @@ class UserRepository @Inject constructor(
     private val userDao: UserDao,
     private val logger: Timber.Tree
 ) {
-    private val _currentUser: MutableSharedFlow<com.wbrawner.nanoflux.storage.model.User> = MutableSharedFlow(replay = 1)
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
+    private val _currentUser: MutableSharedFlow<com.wbrawner.nanoflux.storage.model.User> =
+        MutableSharedFlow(replay = 1)
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
+        repositoryScope.launch(Dispatchers.IO) {
             try {
                 getCurrentUser()
             } catch (e: Exception) {
