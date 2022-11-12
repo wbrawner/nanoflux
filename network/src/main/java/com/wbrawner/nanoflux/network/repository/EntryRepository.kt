@@ -23,6 +23,7 @@ class EntryRepository @Inject constructor(
     private val entryDao: EntryDao,
     private val logger: Timber.Tree
 ) {
+    private val repositoryScope = CoroutineScope(Dispatchers.IO)
     fun observeRead() = entryDao.observeRead()
     fun observeStarred() = entryDao.observeStarred()
     fun observeUnread() = entryDao.observeUnread()
@@ -62,15 +63,19 @@ class EntryRepository @Inject constructor(
 
     suspend fun markEntryRead(entry: Entry) {
         entryDao.update(entry.copy(status = Entry.Status.READ))
-        retryOnFailure {
-            apiService.updateEntries(listOf(entry.id), Entry.Status.READ)
+        repositoryScope.launch {
+            retryOnFailure {
+                apiService.updateEntries(listOf(entry.id), Entry.Status.READ)
+            }
         }
     }
 
     suspend fun markEntryUnread(entry: Entry) {
         entryDao.update(entry.copy(status = Entry.Status.UNREAD))
-        retryOnFailure {
-            apiService.updateEntries(listOf(entry.id), Entry.Status.UNREAD)
+        repositoryScope.launch {
+            retryOnFailure {
+                apiService.updateEntries(listOf(entry.id), Entry.Status.UNREAD)
+            }
         }
     }
 
