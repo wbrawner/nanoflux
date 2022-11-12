@@ -13,8 +13,8 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import io.ktor.util.reflect.*
+import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.io.File
@@ -296,13 +296,32 @@ class KtorMinifluxApiService @Inject constructor(
     override suspend fun updateFeed(id: Long, feed: FeedJson): Feed = client.put(url("feeds/$id")) {
         contentType(ContentType.Application.Json)
         setBody(feed)
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
     }.body()
 
-    override suspend fun refreshFeeds(): HttpResponse = client.put(url("feeds/refresh"))
+    override suspend fun refreshFeeds(): HttpResponse = client.put(url("feeds/refresh")) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }
 
-    override suspend fun refreshFeed(id: Long): HttpResponse = client.put(url("feeds/$id/refresh"))
+    override suspend fun refreshFeed(id: Long): HttpResponse =
+        client.put(url("feeds/$id/refresh")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
 
-    override suspend fun deleteFeed(id: Long): HttpResponse = client.delete(url("feeds/$id"))
+    override suspend fun deleteFeed(id: Long): HttpResponse = client.delete(url("feeds/$id")) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }
 
     override suspend fun getFeedEntries(
         feedId: Long,
@@ -334,10 +353,21 @@ class KtorMinifluxApiService @Inject constructor(
             "search" to search,
             "category_id" to categoryId,
         )
-    ).body()
+    ) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }.body()
 
     override suspend fun getFeedEntry(feedId: Long, entryId: Long): Entry =
-        client.get(url("feeds/$feedId/entries/$entryId")).body()
+        client.get(url("feeds/$feedId/entries/$entryId")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }.body()
 
     override suspend fun getEntries(
         status: List<Entry.Status>?,
@@ -374,19 +404,43 @@ class KtorMinifluxApiService @Inject constructor(
         }
     }.body()
 
-    override suspend fun getEntry(entryId: Long): Entry = client.get(url("entries/$entryId")).body()
+    override suspend fun getEntry(entryId: Long): Entry = client.get(url("entries/$entryId")) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }.body()
 
     override suspend fun markFeedEntriesAsRead(id: Long): HttpResponse =
-        client.put(url("feeds/$id/mark-all-as-read"))
+        client.put(url("feeds/$id/mark-all-as-read")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
 
     override suspend fun updateEntries(entryIds: List<Long>, status: Entry.Status): HttpResponse =
         client.put(url("entries")) {
             contentType(ContentType.Application.Json)
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
             setBody(UpdateEntryRequest(entryIds, status))
         }
 
     override suspend fun toggleEntryBookmark(id: Long): HttpResponse =
-        client.put(url("entries/$id/bookmark"))
+        client.put(url("entries/$id/bookmark")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
 
     override suspend fun shareEntry(entry: Entry): HttpResponse {
         // This is the only method that doesn't really go through the API because there doesn't
@@ -425,6 +479,9 @@ class KtorMinifluxApiService @Inject constructor(
 //        body = @Serializable object {
 //            val title = title
 //        }
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
     }.body()
 
     override suspend fun updateCategory(id: Long, title: String): Category =
@@ -432,13 +489,33 @@ class KtorMinifluxApiService @Inject constructor(
 //            body = @Serializable object {
 //                val title = title
 //            }
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
         }.body()
 
     override suspend fun deleteCategory(id: Long): HttpResponse =
-        client.delete(url("categories/$id"))
+        client.delete(url("categories/$id")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
 
     override suspend fun markCategoryEntriesAsRead(id: Long): HttpResponse =
-        client.put(url("categories/$id/mark-all-as-read"))
+        client.put(url("categories/$id/mark-all-as-read")) {
+            headers {
+                header(
+                    "Authorization",
+                    sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString()
+                )
+            }
+        }
 
     override suspend fun opmlExport(): HttpResponse {
         TODO("Not yet implemented")
@@ -458,9 +535,17 @@ class KtorMinifluxApiService @Inject constructor(
         }
     }.body()
 
-    override suspend fun getUser(id: Long): User = client.get(url("users/$id")).body()
+    override suspend fun getUser(id: Long): User = client.get(url("users/$id")) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }.body()
 
-    override suspend fun getUserByName(name: String): User = client.get(url("users/$name")).body()
+    override suspend fun getUserByName(name: String): User = client.get(url("users/$name")) {
+        headers {
+            header("Authorization", sharedPreferences.getString(PREF_KEY_AUTH_TOKEN, "").toString())
+        }
+    }.body()
 
     override suspend fun getUses(): List<User> {
         TODO("Not yet implemented")
