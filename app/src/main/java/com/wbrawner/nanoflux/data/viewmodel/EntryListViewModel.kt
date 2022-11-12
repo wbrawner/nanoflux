@@ -2,12 +2,14 @@ package com.wbrawner.nanoflux.data.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
+import com.wbrawner.nanoflux.network.EntryAndFeedPagingSource
 import com.wbrawner.nanoflux.network.repository.*
 import com.wbrawner.nanoflux.storage.model.Entry
-import com.wbrawner.nanoflux.storage.model.EntryAndFeed
 import com.wbrawner.nanoflux.syncAll
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -24,7 +26,12 @@ abstract class EntryListViewModel(
     val loading = _loading.asStateFlow()
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
-    abstract val entries: Flow<List<EntryAndFeed>>
+    protected open val entryStatus: EntryStatus? = null
+    private val pagingSource: EntryAndFeedPagingSource
+        get() = EntryAndFeedPagingSource(entryRepository, entryStatus)
+    val entries = Pager(PagingConfig(pageSize = 15)) {
+        pagingSource
+    }.flow.cachedIn(viewModelScope)
 
     fun dismissError() {
         _errorMessage.value = null
@@ -39,9 +46,10 @@ abstract class EntryListViewModel(
         return entry.url
     }
 
-    fun refresh(status: EntryStatus? = null) = viewModelScope.launch(Dispatchers.IO) {
+    fun refresh() = viewModelScope.launch(Dispatchers.IO) {
         _loading.emit(true)
         syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
+        pagingSource.invalidate()
         _loading.emit(false)
     }
 
@@ -51,9 +59,11 @@ abstract class EntryListViewModel(
         } else if (entry.status == Entry.Status.UNREAD) {
             entryRepository.markEntryRead(entry)
         }
+        pagingSource.invalidate()
     }
 
     fun toggleStar(entry: Entry) = viewModelScope.launch(Dispatchers.IO) {
         entryRepository.toggleStar(entry)
+        pagingSource.invalidate()
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.wbrawner.nanoflux.data.viewmodel.EntryListViewModel
 import kotlinx.coroutines.launch
 
@@ -21,7 +22,7 @@ fun EntryListScreen(
 ) {
     val loading by entryListViewModel.loading.collectAsState()
     val errorMessage by entryListViewModel.errorMessage.collectAsState()
-    val entries by entryListViewModel.entries.collectAsState(emptyList())
+    val entries = entryListViewModel.entries.collectAsLazyPagingItems()
     val coroutineScope = rememberCoroutineScope()
     errorMessage?.let {
         coroutineScope.launch {

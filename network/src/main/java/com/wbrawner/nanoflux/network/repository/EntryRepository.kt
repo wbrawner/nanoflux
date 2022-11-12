@@ -8,7 +8,10 @@ import com.wbrawner.nanoflux.storage.model.Entry
 import com.wbrawner.nanoflux.storage.model.EntryAndFeed
 import io.ktor.http.*
 import io.ktor.util.network.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.IOException
 import javax.inject.Inject
@@ -20,41 +23,36 @@ class EntryRepository @Inject constructor(
     private val entryDao: EntryDao,
     private val logger: Timber.Tree
 ) {
-    fun observeRead(): Flow<List<EntryAndFeed>> = entryDao.observeRead()
-    fun observeStarred(): Flow<List<EntryAndFeed>> = entryDao.observeStarred()
-    fun observeUnread(): Flow<List<EntryAndFeed>> = entryDao.observeUnread()
+    fun observeRead() = entryDao.observeRead()
+    fun observeStarred() = entryDao.observeStarred()
+    fun observeUnread() = entryDao.observeUnread()
 
-    fun getCount(): Long = entryDao.getCount()
+    suspend fun count(): Long = entryDao.count()
 
-    suspend fun getAll(fetch: Boolean = false, afterId: Long? = null): List<EntryAndFeed> {
-        if (fetch) {
-            getEntries { page ->
-                apiService.getEntries(
-                    order = Entry.Order.PUBLISHED_AT,
-                    direction = Entry.SortDirection.DESC,
-                    offset = 100L * page,
-                    limit = 100,
-                    afterEntryId = afterId
-                )
-            }
+    suspend fun fetch(afterId: Long? = null) {
+        getEntries { page ->
+            apiService.getEntries(
+                order = Entry.Order.PUBLISHED_AT,
+                direction = Entry.SortDirection.DESC,
+                offset = 100L * page,
+                limit = 100,
+                afterEntryId = afterId
+            )
         }
-        return entryDao.getAll()
     }
 
-    suspend fun getAllUnread(fetch: Boolean = false): List<EntryAndFeed> {
-        if (fetch) {
-            getEntries { page ->
-                apiService.getEntries(
-                    offset = 100L * page,
-                    limit = 100,
-                    status = listOf(Entry.Status.UNREAD)
-                )
-            }
-        }
-        return entryDao.getAllUnread()
-    }
+    suspend fun load(limit: Int, offset: Int) = entryDao.load(limit, offset)
+    suspend fun loadRead(limit: Int, offset: Int) = entryDao.loadRead(limit, offset)
+    suspend fun loadUnread(limit: Int, offset: Int) = entryDao.loadUnread(limit, offset)
+    suspend fun loadStarred(limit: Int, offset: Int) = entryDao.loadStarred(limit, offset)
 
-    suspend fun getEntry(id: Long): Flow<EntryAndFeed> {
+    suspend fun getEntry(id: Long): EntryAndFeed? = entryDao.get(id)
+        ?: run {
+            entryDao.insertAll(apiService.getEntry(id))
+            entryDao.get(id)
+        }
+
+    suspend fun observeEntry(id: Long): Flow<EntryAndFeed> {
         val entry = entryDao.observe(id)
         if (entryDao.get(id) == null) {
             entryDao.insertAll(apiService.getEntry(id))

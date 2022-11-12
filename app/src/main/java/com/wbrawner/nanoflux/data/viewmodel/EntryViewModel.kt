@@ -36,7 +36,7 @@ class EntryViewModel @Inject constructor(
             _errorMessage.value = null
             try {
                 var markedRead = false
-                entryRepository.getEntry(id).collect {
+                entryRepository.observeEntry(id).collect {
                     _entry.value = it
                     _loading.value = false
                     if (!markedRead) {

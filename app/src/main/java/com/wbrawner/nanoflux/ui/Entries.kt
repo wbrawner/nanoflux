@@ -1,5 +1,6 @@
 package com.wbrawner.nanoflux.ui
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.BitmapFactory
 import android.util.Base64
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -7,8 +8,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.spacedBy
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -27,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemsIndexed
 import com.google.accompanist.flowlayout.FlowCrossAxisAlignment
 import com.google.accompanist.flowlayout.FlowRow
 import com.google.accompanist.swiperefresh.SwipeRefresh
@@ -44,7 +48,7 @@ import kotlin.math.roundToInt
 )
 @Composable
 fun EntryList(
-    entries: List<EntryAndFeed>,
+    entries: LazyPagingItems<EntryAndFeed>,
     onEntryItemClicked: (entry: Entry) -> Unit,
     onFeedClicked: (feed: Feed) -> Unit,
     onCategoryClicked: (category: Category) -> Unit,
@@ -61,10 +65,16 @@ fun EntryList(
     ) {
         LazyColumn {
             itemsIndexed(entries, { _, entry -> entry.entry.id }) { index, entry ->
+                if (entry == null) {
+                    EntryListPlaceholder()
+                    return@itemsIndexed
+                }
                 val dismissState = rememberDismissState()
-                LaunchedEffect(key1 = dismissState.currentValue) {
+                LaunchedEffect(key1 = dismissState.currentValue, key2 = entry.entry.id) {
                     when (dismissState.currentValue) {
-                        DismissValue.DismissedToStart -> onToggleReadClicked(entry.entry)
+                        DismissValue.DismissedToStart -> {
+                            onToggleReadClicked(entry.entry)
+                        }
                         DismissValue.DismissedToEnd -> {
                             onStarClicked(entry.entry)
                             dismissState.reset()
@@ -113,10 +123,44 @@ fun EntryList(
                         onShareClicked = onShareClicked,
                     )
                 }
-                if (index < entries.lastIndex) {
+                if (index < entries.itemCount - 1) {
                     Divider()
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun EntryListPlaceholder() {
+    Surface(color = MaterialTheme.colors.surface) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalArrangement = spacedBy(8.dp)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
+            ) {}
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
+            ) {}
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(30.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
+            ) {}
         }
     }
 }
@@ -245,6 +289,7 @@ fun CategoryButton(
 
 @Composable
 @Preview
+@Preview(uiMode = UI_MODE_NIGHT_YES)
 fun EntryListItem_Preview() {
     NanofluxApp {
         EntryListItem(
@@ -307,6 +352,15 @@ fun EntryListItem_Preview() {
             ),
             {}, {}, {}, {}, {}
         )
+    }
+}
+
+@Composable
+@Preview
+@Preview(uiMode = UI_MODE_NIGHT_YES)
+fun EntryListPlaceholder_Preview() {
+    NanofluxApp {
+        EntryListPlaceholder()
     }
 }
 

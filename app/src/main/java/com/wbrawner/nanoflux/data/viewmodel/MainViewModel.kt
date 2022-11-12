@@ -24,7 +24,7 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            if (entryRepository.getCount() == 0L) {
+            if (entryRepository.count() == 0L) {
                 syncAll(categoryRepository, feedRepository, iconRepository, entryRepository)
             }
         }

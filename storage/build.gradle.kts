@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.preference)
     implementation(libs.room.ktx)
     kapt(libs.room.kapt)
+    api(libs.androidx.paging)
     implementation(libs.bundles.coroutines)
     implementation(libs.kotlinx.serialization)
     implementation(libs.hilt.android.core)

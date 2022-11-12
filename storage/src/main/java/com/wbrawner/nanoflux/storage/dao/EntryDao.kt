@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface EntryDao {
     @Query("SELECT COUNT(*) FROM Entry")
-    fun getCount(): Long
+    suspend fun count(): Long
 
     @Transaction
     @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
@@ -35,12 +35,20 @@ interface EntryDao {
     fun observeUnread(): Flow<List<EntryAndFeed>>
 
     @Transaction
-    @Query("SELECT * FROM Entry ORDER BY publishedAt DESC")
-    fun getAll(): List<EntryAndFeed>
+    @Query("SELECT * FROM Entry ORDER BY publishedAt DESC LIMIT :limit OFFSET :offset")
+    suspend fun load(limit: Int, offset: Int): List<EntryAndFeed>
 
     @Transaction
-    @Query("SELECT * FROM Entry WHERE status = \"UNREAD\" ORDER BY createdAt DESC")
-    fun getAllUnread(): List<EntryAndFeed>
+    @Query("SELECT * FROM Entry WHERE status = \"READ\" ORDER BY createdAt DESC LIMIT :limit OFFSET :offset")
+    suspend fun loadRead(limit: Int, offset: Int): List<EntryAndFeed>
+
+    @Transaction
+    @Query("SELECT * FROM Entry WHERE status = \"UNREAD\" ORDER BY createdAt DESC LIMIT :limit OFFSET :offset")
+    suspend fun loadUnread(limit: Int, offset: Int): List<EntryAndFeed>
+
+    @Transaction
+    @Query("SELECT * FROM Entry WHERE starred = 1 ORDER BY publishedAt DESC LIMIT :limit OFFSET :offset")
+    suspend fun loadStarred(limit: Int, offset: Int): List<EntryAndFeed>
 
     @Transaction
     @Query("SELECT * FROM Entry WHERE id = :id")

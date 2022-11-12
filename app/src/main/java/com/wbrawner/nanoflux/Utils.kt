@@ -19,5 +19,5 @@ suspend fun syncAll(
             iconRepository.getFeedIcon(it.feed.id)
         }
     }
-    entryRepository.getAll(true)
+    entryRepository.fetch()
 }
