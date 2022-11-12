@@ -90,7 +90,18 @@ class UserRepository @Inject constructor(
                 if (it == -1L) {
                     null
                 } else {
-                    userDao.getAllByIds(it).firstOrNull()
+                    userDao.getAllByIds(it)
+                        .firstOrNull()
+                        ?.apply {
+                            try {
+                                apiService.getCurrentUser().also { user ->
+                                    userDao.insertAll(user)
+                                    _currentUser.emit(user)
+                                }
+                            } catch (e: Exception) {
+                                logger.e(e)
+                            }
+                        }
                 }
             }
             ?: apiService.getCurrentUser().also {
