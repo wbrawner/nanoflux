@@ -23,7 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -86,29 +88,49 @@ fun EntryList(
                     modifier = Modifier.animateItemPlacement(),
                     state = dismissState,
                     background = {
-                        val (color, text, icon) = when (dismissState.dismissDirection) {
+                        val (backgroundColor, foregroundColor, text, icon) = when (dismissState.dismissDirection) {
                             DismissDirection.StartToEnd ->
                                 if (entry.entry.starred) {
-                                    Triple(Yellow700, "Unstarred", Icons.Outlined.Star)
+                                    EntrySwipeState(
+                                        Yellow700,
+                                        Color.Black,
+                                        "Unstarred",
+                                        Icons.Outlined.Star
+                                    )
                                 } else {
-                                    Triple(Yellow700, "Starred", Icons.Filled.Star)
+                                    EntrySwipeState(
+                                        Yellow700,
+                                        Color.Black,
+                                        "Starred",
+                                        Icons.Filled.Star
+                                    )
                                 }
-                            DismissDirection.EndToStart -> Triple(
+                            DismissDirection.EndToStart -> EntrySwipeState(
                                 Green700,
+                                Color.White,
                                 "Read",
                                 Icons.Default.Email
                             )
-                            else -> Triple(MaterialTheme.colors.surface, "", Icons.Default.Info)
+                            else -> EntrySwipeState(
+                                MaterialTheme.colors.surface,
+                                MaterialTheme.colors.onSurface,
+                                "",
+                                Icons.Default.Info
+                            )
                         }
-                        Surface(modifier = Modifier.fillMaxSize(), color = color) {
+                        Surface(modifier = Modifier.fillMaxSize(), color = backgroundColor) {
                             Row(
                                 modifier = Modifier.fillMaxSize(),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Image(imageVector = icon, contentDescription = null)
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = foregroundColor
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(text)
+                                Text(text = text, color = foregroundColor)
                             }
                         }
                     }
@@ -130,6 +152,13 @@ fun EntryList(
         }
     }
 }
+
+data class EntrySwipeState(
+    val backgroundColor: Color,
+    val foregroundColor: Color,
+    val text: String,
+    val icon: ImageVector
+)
 
 @Composable
 fun EntryListPlaceholder() {
