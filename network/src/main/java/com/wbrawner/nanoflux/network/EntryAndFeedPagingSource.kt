@@ -30,7 +30,6 @@ class EntryAndFeedPagingSource(
             } else {
                 null
             }
-            Timber.tag("Nanoflux").d("Loading data at page $nextPageNumber")
             val loadFunction = when (entryStatus) {
                 EntryStatus.UNREAD -> entryRepository::loadUnread
                 EntryStatus.HISTORY -> entryRepository::loadRead

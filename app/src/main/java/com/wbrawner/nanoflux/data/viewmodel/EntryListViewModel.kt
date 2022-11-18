@@ -27,10 +27,11 @@ abstract class EntryListViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
     protected open val entryStatus: EntryStatus? = null
-    private val pagingSource: EntryAndFeedPagingSource
-        get() = EntryAndFeedPagingSource(entryRepository, entryStatus)
+    private lateinit var pagingSource: EntryAndFeedPagingSource
     val entries = Pager(PagingConfig(pageSize = 15)) {
-        pagingSource
+        EntryAndFeedPagingSource(entryRepository, entryStatus).also {
+            pagingSource = it
+        }
     }.flow.cachedIn(viewModelScope)
 
     fun dismissError() {
