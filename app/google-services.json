@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "583921750708",
+    "project_id": "nanoflux-e0014",
+    "storage_bucket": "nanoflux-e0014.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583921750708:android:7a750d8c49b54854e2fde1",
+        "android_client_info": {
+          "package_name": "com.wbrawner.nanoflux"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "583921750708-j3a6asjpv25mlipscsqkdrc4lhv6nsqm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFmfgCnwEywQPMvkuIhpHL-Xq26WdEMeE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "583921750708-j3a6asjpv25mlipscsqkdrc4lhv6nsqm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
