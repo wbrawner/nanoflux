@@ -38,6 +38,9 @@ compose-test = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "c
 navigation-compose = { module = "androidx.navigation:navigation-compose", version = "2.5.2" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version = "31.1.0" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
 preference = { module = "androidx.preference:preference-ktx", version = "1.2.0" }
 lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.5.1" }
 hilt-android-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-android" }

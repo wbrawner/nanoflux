@@ -3,6 +3,8 @@ plugins {
     id("kotlin-android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -62,6 +64,9 @@ dependencies {
     implementation(libs.accompanist.webview)
     implementation(libs.bundles.compose)
     implementation(libs.lifecycle)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
     implementation(libs.hilt.android.core)
     kapt(libs.hilt.android.kapt)
     implementation(libs.hilt.navigation.compose)
