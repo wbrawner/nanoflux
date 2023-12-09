@@ -74,172 +74,110 @@ fun MainScaffold(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scaffoldState = rememberScaffoldState(snackbarHostState = snackbarHostState)
-    val coroutineScope = rememberCoroutineScope()
-    val (title, setTitle) = remember { mutableStateOf("Unread") }
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
-                navigationIcon = {
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            if (navController.currentDestination?.route?.startsWith("entries/") == true) {
-                                navController.popBackStack()
-                            } else {
-                                scaffoldState.drawerState.open()
-                            }
-                        }
-                    }) {
-                        val icon =
-                            if (navController.currentDestination?.route?.startsWith("entries/") == true) {
-                                Icons.Default.ArrowBack
-                            } else {
-                                Icons.Default.Menu
-                            }
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "Menu"
-                        )
-                    }
-                },
                 title = {
-                    Text(
-                        text = title,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                })
+                    Text(text = "nano")
+                    Text(text = "flux", color = MaterialTheme.colors.primary)
+                },
+                actions = {
+                    IconButton(onClick = onSettingsClicked) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colors.onSurface)
+                    }
+                }
+            )
         },
-        drawerContent = {
-            val topPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding() + 8.dp
-            Row(Modifier.padding(top = topPadding, start = 8.dp, end = 8.dp, bottom = 8.dp)) {
-                Text(text = "nano", fontSize = 24.sp)
-                Text(text = "flux", color = MaterialTheme.colors.primary, fontSize = 24.sp)
+        bottomBar = {
+            BottomAppBar(
+                modifier = Modifier.navigationBarsPadding(),
+                backgroundColor = MaterialTheme.colors.surface
+            ) {
+                BottomNavigationItem(
+                    selected = navController.currentDestination?.route == null || navController.currentDestination?.route == "unread",
+                    onClick = onUnreadClicked,
+                    icon = { Icon(Icons.Default.Article, contentDescription = null) },
+                    label = { Text("Entries") },
+                    selectedContentColor = MaterialTheme.colors.primary
+                )
+//                BottomNavigationItem(
+//                    selected = navController.currentDestination?.route == "starred",
+//                    onClick = onStarredClicked,
+//                    icon = { Icon(Icons.Default.Star, contentDescription = null) },
+//                    label = { Text("Starred") },
+//                    selectedContentColor = MaterialTheme.colors.primary
+//                )
+//                BottomNavigationItem(
+//                    selected = navController.currentDestination?.route == "history",
+//                    onClick = onHistoryClicked,
+//                    icon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+//                    label = { Text("History") },
+//                    selectedContentColor = MaterialTheme.colors.primary
+//                )
+                BottomNavigationItem(
+                    selected = navController.currentDestination?.route == "feeds",
+                    onClick = onFeedsClicked,
+                    icon = { Icon(Icons.Default.List, contentDescription = null) },
+                    label = { Text("Feeds") },
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    enabled = false // remove when implemented
+                )
+                BottomNavigationItem(
+                    selected = navController.currentDestination?.route == "categories",
+                    onClick = onCategoriesClicked,
+                    icon = { Icon(Icons.Default.Category, contentDescription = null) },
+                    label = {
+                        Text(
+                            text = "Categories",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    enabled = false // remove when implemented
+                )
             }
-            DrawerButton(
-                onClick = {
-                    onUnreadClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.Email, text = "Unread"
-            )
-            DrawerButton(
-                onClick = {
-                    onStarredClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.Star,
-                text = "Starred"
-            )
-            DrawerButton(
-                onClick = {
-                    onHistoryClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.DateRange,
-                text = "History"
-            )
-            DrawerButton(
-                onClick = {
-                    onFeedsClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.List,
-                text = "Feeds"
-            )
-            DrawerButton(
-                onClick = {
-                    onCategoriesClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.Info,
-                text = "Categories"
-            )
-            DrawerButton(
-                onClick = {
-                    onSettingsClicked()
-                    coroutineScope.launch {
-                        scaffoldState.drawerState.close()
-                    }
-                },
-                icon = Icons.Default.Settings,
-                text = "Settings"
-            )
-        }
-    ) {
+        },
+    ) { padding ->
         // TODO: Extract routes to constants
         NavHost(
-            modifier = Modifier.padding(it),
+            modifier = Modifier.padding(padding),
             navController = navController,
             startDestination = "unread"
         ) {
             composable("unread") {
-                LaunchedEffect(navController.currentBackStackEntry) {
-                    setTitle("Unread")
-                }
                 EntryListScreen(navController, snackbarHostState, hiltViewModel<UnreadViewModel>())
             }
             composable("starred") {
-                LaunchedEffect(navController.currentBackStackEntry) {
-                    setTitle("Starred")
-                }
                 EntryListScreen(navController, snackbarHostState, hiltViewModel<StarredViewModel>())
             }
             composable("history") {
-                LaunchedEffect(navController.currentBackStackEntry) {
-                    setTitle("History")
-                }
+                EntryListScreen(navController, snackbarHostState, hiltViewModel<HistoryViewModel>())
+            }
+            composable(
+                "feeds/{feedId}",
+                arguments = listOf(navArgument("feedId") { type = NavType.LongType })
+            ) {
+                EntryListScreen(navController, snackbarHostState, hiltViewModel<HistoryViewModel>())
+            }
+            composable(
+                "categories/{categoryId}",
+                arguments = listOf(navArgument("categoryId") { type = NavType.LongType })
+            ) {
                 EntryListScreen(navController, snackbarHostState, hiltViewModel<HistoryViewModel>())
             }
             composable(
                 "entries/{entryId}",
                 arguments = listOf(navArgument("entryId") { type = NavType.LongType })
             ) {
-                LaunchedEffect(navController.currentBackStackEntry) {
-                    setTitle("")
-                }
                 EntryScreen(
                     it.arguments!!.getLong("entryId"),
                     navController,
                     hiltViewModel(),
-                    setTitle,
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun DrawerButton(onClick: () -> Unit, icon: ImageVector, text: String) {
-    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colors.onSurface
-            )
-            Spacer(Modifier.width(16.dp))
-            Text(
-                text = text,
-                color = MaterialTheme.colors.onSurface,
-                modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.body2
-            )
         }
     }
 }

@@ -9,7 +9,9 @@ import timber.log.Timber
 
 class EntryAndFeedPagingSource(
     private val entryRepository: EntryRepository,
-    private val entryStatus: EntryStatus? = null
+    private val entryStatus: EntryStatus? = null,
+    private val feedId: Long? = null,
+    private val categoryId: Long? = null,
 ) : PagingSource<Int, EntryAndFeed>() {
     init {
         Timber.tag("Nanoflux").d("EntryAndFeedPagingSource created")

@@ -27,6 +27,8 @@ abstract class EntryListViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage = _errorMessage.asStateFlow()
     protected open val entryStatus: EntryStatus? = null
+    protected open val feedId: Int? = null
+    protected open val categoryId: Int? = null
     private lateinit var pagingSource: EntryAndFeedPagingSource
     val entries = Pager(PagingConfig(pageSize = 15)) {
         EntryAndFeedPagingSource(entryRepository, entryStatus).also {

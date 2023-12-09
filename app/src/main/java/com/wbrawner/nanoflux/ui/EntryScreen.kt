@@ -35,7 +35,6 @@ fun EntryScreen(
     entryId: Long,
     navController: NavController,
     entryViewModel: EntryViewModel,
-    setTitle: (String) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -58,7 +57,7 @@ fun EntryScreen(
     entry?.let {
         LaunchedEffect(it.entry.title) {
             // TODO: Use Material3 to use collapsing toolbar
-            setTitle(it.entry.title)
+//            setTitle(it.entry.title)
         }
         EntryScreen(
             entry = it,
